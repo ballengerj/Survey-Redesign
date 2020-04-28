@@ -1,0 +1,821 @@
+---
+title: 'Survey Change Investigation'
+author: "Joseph C. Ballenger, PhD"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    code_folding: "hide"
+    dev: "png"
+    fig_height: 4.5
+    fig_width: 6.5
+    highllight: "tango"
+    keep_md: TRUE
+    smart: TRUE
+    toc: TRUE
+    toc_depth: 2
+    toc_float: TRUE
+    df_print: "paged"
+  pdf_document:
+    toc: TRUE
+    toc_depth: 2
+    fig.width: 13.33
+    fig.height: 7.5
+    fig.crop: TRUE
+    dev: "png"
+    df_print: "tibble"
+    highlight: "tango"
+    keep_tex: TRUE
+---
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+# knitr options setting
+knitr::opts_chunk$set(autodep = TRUE, fig.show = 'asis', fig.width = 13.33,
+                      fig.height = 7.5, dev = "png", tidy = TRUE, 
+                      dev.args = list(type = "windows", family = "serif"), 
+                      dpi = 800, cache = TRUE, message = FALSE, echo = TRUE,
+                      warning = FALSE)
+# Number printing options
+options(digits = 4)
+# Required libraries
+library(tidyverse)
+library(FSA)
+library(extrafont)
+library(readxl)
+library(survey)
+```
+
+```{r}
+fig.width.powerpoint <- 13.33
+fig.height.powerpoint <- 7.5
+fig.width.word.l <- 6.5
+fig.width.word.p <- 9
+fig.height.word.l <- 3.5
+fig.height.word.p <- 6
+
+font.size.word <- 12
+font.size.powerpoint <- 18
+```
+
+```{r}
+# Initial filtering criteria
+n.samplespermonth <- 60 # Used for identification of appropriate areas
+n.samplingyears <- 5 # Used in identification of appropriate areas
+begdate <- "1991-01-01" # Earliest trammel data considered valid
+enddate <- "2018-12-31"
+crit.depth <- 2 # Critica depth (in meters) that if exceeded would lead to 
+# exclusion of trammel collection
+SelectTide <- c(5:7) # Tidal stages targeted by the trammel net survey - if not 
+# one of these, exclude collection from analysis
+SelectMonths <- c(1:8) # Month to select for the current analysis - if not one
+# of these, exclude collection from analysis
+SelectMRIPArea <- "Inland" # Appropriate MRIP area for consideration
+YearAreaCombos <- c("1991-ACE Basin", "1992-ACE Basin", "1993-ACE Basin", 
+                    "1991-Cape Romain", "1993-Cape Romain", 
+                    "1994-Port Royal Sound", "1998-Port Royal Sound", 
+                    "1999-Port Royal Sound", "1992-Winyah Bay", 
+                    "1993-Winyah Bay", "1994-Winyah Bay", "2001-Winyah Bay", 
+                    "2002-Winyah Bay") # Identification of year-area compbos 
+# to exclude from trammel net analysis
+DeletedSites <- c("0517", "0434", "0058", "0131", "0363", "0231", "0063", 
+                  "0192", "0573", "0051", "0772") # Trammel sites that should be 
+# deleted from analyses
+# Year and stratum combinations that should be deleted from analyses
+YearStratumCombos <- c("1991-AB", "1992-AB", "1993-AB", "1991-AR", "1992-AR",
+                       "1991-BR", "1992-BR", "1993-BR", "1993-BR", "1994-BR",
+                       "1995-BR", "1996-BR", "1997-BR", "1998-BR", "1999-BR",
+                       "2000-BR", "2001-BR", "2002-BR", "2003-BR", "2004-BR",
+                       "2005-BR", "2006-BR", "2007-BR", "2008-BR", "2009-BR",
+                       "1991-CT", "1992-CT", "1993-CT", "1993-CT", "1994-CT",
+                       "1995-CT", "1996-CT", "1997-CT", "1998-CT", "1999-CT",
+                       "2000-CT", "2001-CT", "2002-CT", "2003-CT", "2004-CT",
+                       "2005-CT", "2006-CT", "2007-CT", "2008-CT", "2009-CT",
+                       "1991-CR", "1992-CR", "1993-CR", "1998-CR", "1999-CR",
+                       "2000-CR", "2001-CR", "2002-CR", "2003-CR", "2004-CR",
+                       "2005-CR", "2006-CR", "2007-CR", "2008-CR", "2009-CR",
+                       "2010-CR", "2011-CR", "2012-CR", "2013-CR", "2014-CR",
+                       "2015-CR", "2016-CR", "2017-CR", "2018-CR", "1991-MB",
+                       "1992-MB", "1993-MB", "1994-MB", "1995-MB", "1996-MB",
+                       "1997-MB", "1991-RH", "1992-RH", "1993-RH", "1994-RH", 
+                       "1995-RH", "1996-RH", "1997-RH", "1991-WB", "1992-WB",
+                       "1993-WB", "1994-WB", "1995-WB", "1996-WB", "1997-WB",
+                       "1998-WB", "1999-WB", "2000-WB", "2001-WB", "2002-WB")
+Stratum.Selected <- c("LW", "AR", "WB", "RH", "AB", "MB", "CH", "CR") # The 10 strata (9 current, 1 historical) that we
+# develop relative abundance indices for
+```
+
+```{r}
+# Output storage lists
+Table <- list()
+Figures <- list()
+```
+
+```{r }
+# Read in the raw trammel net data and perform some initial data filtering
+setwd('D:/Status of Stocks/Trammel Net/')
+Trammel.Raw <- read_excel("RawTrammelAbundanceData.xlsx", 
+                          sheet = "TrammelAbundance6")
+names(Trammel.Raw) <- c("Collection", names(Trammel.Raw)[-1])
+```
+
+```{r}
+Trammel.Raw <- Trammel.Raw %>%
+  filter(!Site %in% c("0020", "0021", "0097", "0162", "0166", "0175", "0227",
+                      "0240", "0269", "0419", "0490", "0506", "0573", "0593",
+                      "0772"))
+# Assigning Sites to appropriate strata
+# ACE Basin
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0069"] <- "AB"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0165"] <- "AB"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0349"] <- "AB"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0501"] <- "MN"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0502"] <- "MN"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0503"] <- "MN"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0504"] <- "MN"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0517"] <- "AB"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0777"] <- "MN"
+# Cape Romain
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0422"] <- "CR"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0497"] <- "MB"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0511"] <- "RH"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0561"] <- "MB"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0566"] <- "RH"
+# Charleston Harbor
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0004"] <- "AR"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0005"] <- "CH"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0051"] <- "CP"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0063"] <- "CH"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0064"] <- "LW"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0067"] <- "LW"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0068"] <- "LW"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0077"] <- "CH"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0078"] <- "LW"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0131"] <- "MH"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0192"] <- "UW"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0204"] <- "CH"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0214"] <- "CP"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0218"] <- "CH"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0243"] <- "CH"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0265"] <- "CH"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0300"] <- "UW"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0331"] <- "UW"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0454"] <- "CP"
+# MARFIN South (Stono & Kiawah River)
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0042"] <- "MS"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0058"] <- "MS"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0092"] <- "MS"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0453"] <- "MS"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0455"] <- "MS"
+# North Edisto River/ Wadmalaw Rivers
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0431"] <- "NA"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0484"] <- "NA"
+# Port Royal Sound
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0038"] <- "CT"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0055"] <- "CT"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0318"] <- "BR"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0429"] <- "BR"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0476"] <- "BR"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0483"] <- "BR"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0486"] <- "BR"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0491"] <- "BR"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0596"] <- "BR"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0603"] <- "BR"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0604"] <- "BR"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0610"] <- "BR"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0618"] <- "BR"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0524"] <- "CT"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0602"] <- "CT"
+# Winyah Bay
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0739"] <- "WB"
+```
+
+```{r}
+# Identifying sites in MB (Muddy & Bulls Bays) and Romain Harbor that were also 
+# part of the original Cape Romain strata
+CR.Sites <- c("MB10", "MB11", "MB12", 'MB13', 'MB14', 'MB15', 'MB16', 
+              'MB17', 'MB18', 'RH01', 'RH02', 'RH03', 'RH04', 'RH05',
+              'RH06', 'RH07', 'RH08', 'RH09', 'RH19', 'RH20', 'RH21',
+              'RH22', 'RH23', 'RH24', 'RH25', '0499', '0500', '0507',
+              '0509', '0512', '0542', '0568', '0569', '0570', "0497", 
+              "0498", "0337", "0511", "0566")
+Trammel.Raw <- Trammel.Raw %>%
+    mutate(Stratum = ifelse(Site %in% CR.Sites & 
+                                Date < "1998-01-01",
+                            "CR", Stratum)) 
+rm(CR.Sites)
+```
+
+```{r}
+with(Trammel.Raw, table(Stratum, Year))
+```
+
+```{r}
+Trammel.Raw <- Trammel.Raw %>%
+    filterD(Date >= begdate & Date <= enddate) %>%
+    filterD(Area %in% 
+                names(sapply(dimnames(table(Trammel.Raw$Year, 
+                                            Trammel.Raw$Area))[[2]], 
+                             FUN = function(x) {
+                                 length(which(table(Trammel.Raw$Year, 
+                                                    Trammel.Raw$Area)[, x] > 
+                                                  n.samplespermonth))
+                             })[sapply(dimnames(table(Trammel.Raw$Year, 
+                                                      Trammel.Raw$Area))[[2]], 
+                                       FUN = function(x) {
+                                           length(which(table(Trammel.Raw$Year, 
+                                                              Trammel.Raw$Area)[, x] > 
+                                                            n.samplespermonth))  
+                                       }) > n.samplingyears])) %>%
+    mutate(DOY = as.numeric(format(Date, "%j")),
+           Area2 = mapvalues(Area, 
+                             from = c("AB", "AS", "CH", "CR", "PR", 
+                                      "WB","WR"),
+                             to = c("ACE Basin", "Charleston Harbor", 
+                                    "Charleston Harbor", "Cape Romain", 
+                                    "Port Royal Sound", "Winyah Bay", 
+                                    "Charleston Harbor")),
+           YearArea = paste(Year, Area2, sep = "-")) %>%
+    select(Collection:Date, Wave:Duration, DOY:YearArea, 
+           25:length(Trammel.Raw))
+```
+
+Initial Filtering Criteria: 
+
+* Valid Dates of the Survey
++ Start Date of Survey - `r begdate` 
++ Beginning date of survey data to include in subsequent analyses
++ End Date of Survey`r enddate` 
++ End date of survey data to include in subsequent analyses
+* Valid Areas of the Survey
++ The survey has periodically sampled some areas over a short number of years and/or with low sampling intensity; thus, for this analysis we want to remove such areas from consideration because they are traditionally not considered part of the general survey
++ First, we first remove any areas that were not sampled for more than `r n.samplingyears` years
++ Second, we remove additioanl areas that were not sampled, on average, more than `r n.samplespermonth` times per month when sampled
+
+```{r}
+Trammel.Raw <- Trammel.Raw %>%
+    filterD(Stratum %in% Stratum.Selected) # Filtering to strata of interest
+```
+
+* Valid Strata for the Survey
++ We only include data from the following strata: 
+
+```{r}
+Stratum.Selected
+```
+
+```{r}
+Trammel <- Trammel.Raw %>%
+    filter(!YearArea %in% YearAreaCombos) %>% # Filtering to appropriate 
+    # year-area combos
+    mutate(YearStratum = paste(Year, Stratum, sep = "-")) %>%
+    filter(!YearStratum %in% YearStratumCombos) %>% # Filtering to appropriate 
+    # year-stratum comos
+    filterD(Depth <= crit.depth) %>% # the critical depth, and
+    filterD(Tide %in% SelectTide) %>% # appropriate tidal stages.
+    # filterD(Month %in% SelectMonths) %>% # appropriate months.
+    select(-c(YearStratum, Temp_Air, YearArea)) %>% # Deleting some un-needed
+    # columns
+    mutate(Site = factor(Site), # Mutating some variables to convert them to the
+           Stratum = factor(Stratum), # appropriate form
+           Area = factor(Area),
+           Area2 = factor(Area2),
+           Month = factor(Month),
+           Tide = factor(Tide)) %>%
+    select(Collection:Area, Area2, everything()) # Selecting appropriate columns
+```
+
+* Valid Year and Area Combinations for the Survey
++ Particularly with the trammel net survey, we did a fair amount of exploration of habitats throughout the year. At the same time, we at times used some un-standardized sampling protocols. This has resulted in some areas and years where there is a limited amount of effort, but not enough effort to warrant inclusion in a nominal index of abundance. These are identified and removed from further consideration. The removed year and area combos are below:
+
+```{r}
+YearAreaCombos
+```
+
+* Valid Sites for the Survey
++ We remove any collections made at sites that should be deleted from the analysis
++ These sites are deleted generally because they were only sampled either in a single year or only a very few times during the history of the survey
+
+```{r}
+DeletedSites
+```
+
+* Valid Year and Stratum Combintations for the Survey
++ Similar to above, we at times explored habitats in some stratum, either using standardized methodology or un-standardized methodology, resulting in certain year and stratum combinations that we consider should be removed from nominal index development. These are identified and removed from further consideration. The removed year and stratum combos are below:
+
+```{r}
+YearStratumCombos
+```
+
+* Valid Depths for the Survey
++ Maximum Depth - `r crit.depth` m
++ Maximum trammel net survey depths considered valid for analysis
++ When trammel nets are set in deeper waters, the trammel net does not cover the entire water column
+* Valid Tidal Stages for the Survey
++ The trammel net survey targets sampling certain stages of the tidal cycle, thus any collections made outside of these tidal stages are not directly comparable. Thus we remove any collections not part of the survey design by retaining only the following tidal stages in our analysis: 
+
+```{r}
+SelectTide
+```
+
+# Summary Tables
+## Abundance, by Species, of Fish Captured in the Trammel Net Survey
+```{r}
+# Creating a table with the abundance, by species, of fish captured in the 
+# trammel net survey
+Table4 <- data.frame(Name = colnames(Trammel)[23:length(Trammel)],
+                     Abundance = colSums(Trammel[, 23:length(Trammel)]))
+Table4 <- Table4[order(-Table4$Abundance), ]
+Table4$Name <- gsub(".", " ", Table4$Name, fixed = TRUE)
+Table4 <- Table4[Table4$Abundance > 0, ]
+Table4$Rank <- rank(-Table4$Abundance, ties.method = "min")
+Table4$Order <- seq(1:dim(Table4)[1])
+Species.Codes <- read.csv("Species Codes.csv")
+Table4 <- Table4 %>%
+    merge(Species.Codes[,2:4], by.x = "Name", by.y = "Common.Name", 
+          all.x = TRUE) %>%
+    select(Order, Scientific.Name, Name, Family.Name, Abundance, Rank)
+colnames(Table4) <- c("Order", "Scientific.Name", "Common.Name", "Family", 
+                      "Abundance", "Rank")
+Table4 <- Table4[order(-Table4$Abundance), ]
+Table4 <- rbind(Table4, 
+                c("", "", "", "Total", colSums(Table4[5]),
+                  ""))
+Table4$Abundance <- as.numeric(Table4$Abundance)
+(Table$Trammel$SpeciesAbundance <- Table4)
+rm(Table4)
+```
+
+## Abundance, by Species, of Fish Captured in the Trammel Net Survey
+```{r}
+Table4 <- Trammel %>%
+  select(Year, colnames(Trammel)[23:length(Trammel)]) %>%
+  gather(key = "Species", value = "Abundance", 
+         `American Eel`:`Yellowfin Menhaden`) %>%
+  group_by(Year, Species) %>%
+  summarize(Abundance = sum(Abundance)) %>%
+  ungroup()
+write.csv(Table4, "Species Abundance by Year.csv", row.names = FALSE)
+(Table$Trammel$SpeciesAbundancebyYear <- Table4)
+rm(Table4)
+```
+
+# Species Considered for Analysis
+## Species of Interest Trammel Net Survey
+Here, we identify the list of species for which we have averaged catching more than 50 individuals in the survey annually:
+
+```{r}
+Species.Trammel <- Table$Trammel$SpeciesAbundance$Common.Name[Table$Trammel$SpeciesAbundance$Abundance > length(unique(Trammel$Year)) * 50] # Restricting to 
+# species where we captured a minimum of 50 individuals on average annually
+Species.Trammel <- Species.Trammel[Species.Trammel != ""]
+Species.Trammel
+```
+
+The list of species, along with the minimum and maximum month of electrofishing collecitons considered in species specific analyses, are found here:
+
+```{r}
+Selections <- read.csv("Trammel Net Species and Survey Months.csv", 
+                       header = TRUE) %>%
+  rename(`Minimum Month` = Min,
+         `Maximum Month` = Max) %>%
+  filter(Common %in% Species.Trammel) %>%
+  dplyr::select(Common:`Maximum Month`)
+Selections
+```
+
+```{r}
+rm(DeletedSites, n.samplespermonth, n.samplingyears, SelectMRIPArea, 
+   Stratum.Selected, YearAreaCombos, YearStratumCombos, begdate, crit.depth, 
+   enddate, SelectTide)
+```
+
+# Average Catch by Year and Stratum by Species
+```{r}
+Trammel.long <- Trammel %>%
+    gather(key= "Species", value = "Abundance", 
+           'American Eel':'Yellowfin Menhaden', na.rm = TRUE) %>%
+    filter(Species %in% Species.Trammel) %>%
+    mutate(Month = as.numeric(as.character(Month)))
+```
+
+```{r, warning = FALSE}
+trammeldesign <- svydesign(ids = ~ 1, strata = ~ Stratum, 
+                           data = Trammel.long, check.strata = TRUE)
+```
+
+```{r, warning = FALSE}
+CPUE.Results <- data.frame()
+for(species in Species.Trammel) {
+  tmp <- Trammel.long[Trammel.long$Species == species, ]
+  tmp <- tmp %>%
+    filter(Month >= Selections$`Minimum Month`[Selections$Common == 
+                                                 species] &
+             Month <= Selections$`Maximum Month`[Selections$Common == 
+                                                   species])
+  design <- svydesign(ids = ~ 1, strata = ~ Stratum, 
+                      data = tmp, check.strata = TRUE)
+  CPUE <- svyby(~ Abundance, by = ~ Year, 
+                design = design, FUN = svymean,
+                vartype = c("se", "ci", "cv"), drop.empty.groups = FALSE)
+  CPUE$Species <- species
+  CPUE.Results <- rbind(CPUE.Results, CPUE, row.names = NULL)
+}
+```
+
+```{r}
+CPUE.Summary.Year.Org <- CPUE.Results %>%
+  group_by(Species, Year) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV))
+CPUE.Summary.Year.Org
+```
+
+```{r}
+CPUE.Summary.Org <- CPUE.Results %>%
+  filter(Year %in% c(2003:2018)) %>%
+  group_by(Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV)) %>%
+  arrange(Median.CV)
+CPUE.Summary.Org
+write.csv(CPUE.Summary.Org, "CV Sumarries by Species - Original.csv", 
+          row.names = FALSE)
+write.csv(CPUE.Results, "Annual CPUE by Species - Original.csv",
+          row.names = FALSE)
+```
+
+# Sample Data Sets
+```{r}
+Trammel.long.nest <- as_tibble(Trammel.long) %>%
+  mutate(StratumYear = paste(Stratum, Year, sep = "")) %>%
+  nest(-StratumYear)
+Iter <- 1000
+telliter <- 100
+```
+
+```{r}
+# Setup Parallel Backend to Use Many Processors
+# cores <- detectCores()
+# cl <- makeCluster(cores[1] - 1) # Not to overload your computer
+# registerDoParallel(cl)
+# clusterEvalQ(cl, c(library(tidyverse), library(survey)))
+```
+
+## 6 Months of Sampling Per Year
+```{r}
+months <- 6
+CPUE.Results.Subset <- data.frame()
+```
+
+```{r, warning = FALSE}
+set.seed(1234)
+start_time <- Sys.time()
+for(i in 1:Iter) {
+  tmp <- Trammel.long.nest %>%
+    mutate(data = map2(StratumYear, data, ~ .y %>% 
+                         filter(Month %in% sample(1:12, months)))) %>%
+    unnest()
+  for(species in Species.Trammel) {
+    tmp2 <- tmp[tmp$Species == species, ]
+    tmp2 <- tmp2 %>%
+      filter(Month >= Selections$`Minimum Month`[Selections$Common == 
+                                                   species] &
+               Month <= Selections$`Maximum Month`[Selections$Common == 
+                                                     species])
+    design <- svydesign(ids = ~ 1, strata = ~ Stratum, 
+                        data = tmp2, check.strata = TRUE)
+    CPUE <- svyby(~ Abundance, by = ~ Year, 
+                  design = design, FUN = svymean,
+                  vartype = c("se", "ci", "cv"), drop.empty.groups = FALSE)
+    CPUE$Species <- species
+    CPUE$Run <- i
+    CPUE.Results.Subset <- rbind(CPUE.Results.Subset, CPUE, row.names = NULL)
+  }
+  if(i %% telliter == 0) cat(paste("iteration", i, "complete\n"))
+}
+end_time <- Sys.time()
+end_time - start_time
+```
+
+```{r}
+write.csv(CPUE.Results.Subset, 
+          "Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to 6 months.csv", 
+          row.names = FALSE)
+```
+
+## 7 Months of Sampling Per Year
+```{r}
+months <- 7
+CPUE.Results.Subset <- data.frame()
+```
+
+```{r, warning = FALSE}
+start_time <- Sys.time()
+for(i in 1:Iter) {
+  tmp <- Trammel.long.nest %>%
+    mutate(data = map2(StratumYear, data, ~ .y %>% 
+                         filter(Month %in% sample(1:12, months)))) %>%
+    unnest()
+  for(species in Species.Trammel) {
+    tmp2 <- tmp[tmp$Species == species, ]
+    tmp2 <- tmp2 %>%
+      filter(Month >= Selections$`Minimum Month`[Selections$Common == 
+                                                   species] &
+               Month <= Selections$`Maximum Month`[Selections$Common == 
+                                                     species])
+    design <- svydesign(ids = ~ 1, strata = ~ Stratum, 
+                        data = tmp2, check.strata = TRUE)
+    CPUE <- svyby(~ Abundance, by = ~ Year, 
+                  design = design, FUN = svymean,
+                  vartype = c("se", "ci", "cv"), drop.empty.groups = FALSE)
+    CPUE$Species <- species
+    CPUE$Run <- i
+    CPUE.Results.Subset <- rbind(CPUE.Results.Subset, CPUE, row.names = NULL)
+  }
+  if(i %% telliter == 0) cat(paste("iteration", i, "complete\n"))
+}
+end_time <- Sys.time()
+end_time - start_time
+```
+
+```{r}
+write.csv(CPUE.Results.Subset, 
+          "Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to 7 months.csv", 
+          row.names = FALSE)
+```
+
+## 8 Months of Sampling Per Year
+```{r}
+months <- 8
+CPUE.Results.Subset <- data.frame()
+```
+
+```{r, warning = FALSE}
+start_time <- Sys.time()
+for(i in 1:Iter) {
+  tmp <- Trammel.long.nest %>%
+    mutate(data = map2(StratumYear, data, ~ .y %>% 
+                         filter(Month %in% sample(1:12, months)))) %>%
+    unnest()
+  for(species in Species.Trammel) {
+    tmp2 <- tmp[tmp$Species == species, ]
+    tmp2 <- tmp2 %>%
+      filter(Month >= Selections$`Minimum Month`[Selections$Common == 
+                                                   species] &
+               Month <= Selections$`Maximum Month`[Selections$Common == 
+                                                     species])
+    design <- svydesign(ids = ~ 1, strata = ~ Stratum, 
+                        data = tmp2, check.strata = TRUE)
+    CPUE <- svyby(~ Abundance, by = ~ Year, 
+                  design = design, FUN = svymean,
+                  vartype = c("se", "ci", "cv"), drop.empty.groups = FALSE)
+    CPUE$Species <- species
+    CPUE$Run <- i
+    CPUE.Results.Subset <- rbind(CPUE.Results.Subset, CPUE, row.names = NULL)
+  }
+  if(i %% telliter == 0) cat(paste("iteration", i, "complete\n"))
+}
+end_time <- Sys.time()
+end_time - start_time
+```
+
+```{r}
+write.csv(CPUE.Results.Subset, 
+          "Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to 8 months.csv", 
+          row.names = FALSE)
+```
+
+## 9 Months of Sampling Per Year
+```{r}
+months <- 9
+CPUE.Results.Subset <- data.frame()
+```
+
+```{r, warning = FALSE}
+start_time <- Sys.time()
+for(i in 1:Iter) {
+  tmp <- Trammel.long.nest %>%
+    mutate(data = map2(StratumYear, data, ~ .y %>% 
+                         filter(Month %in% sample(1:12, months)))) %>%
+    unnest()
+  for(species in Species.Trammel) {
+    tmp2 <- tmp[tmp$Species == species, ]
+    tmp2 <- tmp2 %>%
+      filter(Month >= Selections$`Minimum Month`[Selections$Common == 
+                                                   species] &
+               Month <= Selections$`Maximum Month`[Selections$Common == 
+                                                     species])
+    design <- svydesign(ids = ~ 1, strata = ~ Stratum, 
+                        data = tmp2, check.strata = TRUE)
+    CPUE <- svyby(~ Abundance, by = ~ Year, 
+                  design = design, FUN = svymean,
+                  vartype = c("se", "ci", "cv"), drop.empty.groups = FALSE)
+    CPUE$Species <- species
+    CPUE$Run <- i
+    CPUE.Results.Subset <- rbind(CPUE.Results.Subset, CPUE, row.names = NULL)
+  }
+  if(i %% telliter == 0) cat(paste("iteration", i, "complete\n"))
+}
+end_time <- Sys.time()
+end_time - start_time
+```
+
+```{r}
+write.csv(CPUE.Results.Subset, 
+          "Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to 9 months.csv", 
+          row.names = FALSE)
+```
+
+## 10 Months of Sampling Per Year
+```{r}
+months <- 10
+CPUE.Results.Subset <- data.frame()
+```
+
+```{r, warning = FALSE}
+start_time <- Sys.time()
+for(i in 1:Iter) {
+  tmp <- Trammel.long.nest %>%
+    mutate(data = map2(StratumYear, data, ~ .y %>% 
+                         filter(Month %in% sample(1:12, months)))) %>%
+    unnest()
+  for(species in Species.Trammel) {
+    tmp2 <- tmp[tmp$Species == species, ]
+    tmp2 <- tmp2 %>%
+      filter(Month >= Selections$`Minimum Month`[Selections$Common == 
+                                                   species] &
+               Month <= Selections$`Maximum Month`[Selections$Common == 
+                                                     species])
+    design <- svydesign(ids = ~ 1, strata = ~ Stratum, 
+                        data = tmp2, check.strata = TRUE)
+    CPUE <- svyby(~ Abundance, by = ~ Year, 
+                  design = design, FUN = svymean,
+                  vartype = c("se", "ci", "cv"), drop.empty.groups = FALSE)
+    CPUE$Species <- species
+    CPUE$Run <- i
+    CPUE.Results.Subset <- rbind(CPUE.Results.Subset, CPUE, row.names = NULL)
+  }
+  if(i %% telliter == 0) cat(paste("iteration", i, "complete\n"))
+}
+end_time <- Sys.time()
+end_time - start_time
+```
+
+```{r}
+write.csv(CPUE.Results.Subset, 
+          "Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to 10 months.csv", 
+          row.names = FALSE)
+```
+
+## 11 Months of Sampling Per Year
+```{r}
+months <- 11
+CPUE.Results.Subset <- data.frame()
+```
+
+```{r, warning = FALSE}
+start_time <- Sys.time()
+for(i in 1:Iter) {
+  tmp <- Trammel.long.nest %>%
+    mutate(data = map2(StratumYear, data, ~ .y %>% 
+                         filter(Month %in% sample(1:12, months)))) %>%
+    unnest()
+  for(species in Species.Trammel) {
+    tmp2 <- tmp[tmp$Species == species, ]
+    tmp2 <- tmp2 %>%
+      filter(Month >= Selections$`Minimum Month`[Selections$Common == 
+                                                   species] &
+               Month <= Selections$`Maximum Month`[Selections$Common == 
+                                                     species])
+    design <- svydesign(ids = ~ 1, strata = ~ Stratum, 
+                        data = tmp2, check.strata = TRUE)
+    CPUE <- svyby(~ Abundance, by = ~ Year, 
+                  design = design, FUN = svymean,
+                  vartype = c("se", "ci", "cv"), drop.empty.groups = FALSE)
+    CPUE$Species <- species
+    CPUE$Run <- i
+    CPUE.Results.Subset <- rbind(CPUE.Results.Subset, CPUE, row.names = NULL)
+  }
+  if(i %% telliter == 0) cat(paste("iteration", i, "complete\n"))
+}
+end_time <- Sys.time()
+end_time - start_time
+```
+
+```{r}
+write.csv(CPUE.Results.Subset, 
+          "Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to 11 months.csv", 
+          row.names = FALSE)
+```
+
+## February - December Sampling
+```{r}
+months <- 2:12
+CPUE.Results.Subset <- data.frame()
+```
+
+```{r, warning = FALSE}
+start_time <- Sys.time()
+for(species in Species.Trammel) {
+  tmp <- Trammel.long[Trammel.long$Species == species & 
+                        Trammel.long$Month %in% months, ]
+  tmp <- tmp %>%
+    filter(Month >= Selections$`Minimum Month`[Selections$Common == 
+                                                 species] &
+             Month <= Selections$`Maximum Month`[Selections$Common == 
+                                                   species])
+  design <- svydesign(ids = ~ 1, strata = ~ Stratum, 
+                      data = tmp2, check.strata = TRUE)
+  CPUE <- svyby(~ Abundance, by = ~ Year, 
+                design = design, FUN = svymean,
+                vartype = c("se", "ci", "cv"), drop.empty.groups = FALSE)
+  CPUE$Species <- species
+  CPUE.Results.Subset <- rbind(CPUE.Results.Subset, CPUE, row.names = NULL)
+}
+end_time <- Sys.time()
+end_time - start_time
+```
+
+```{r}
+write.csv(CPUE.Results.Subset, 
+          "Annual CPUE by Species - Sub-Setting Sampling to February - December.csv", 
+          row.names = FALSE)
+```
+
+## March - December Sampling
+```{r}
+months <- 3:12
+CPUE.Results.Subset <- data.frame()
+```
+
+```{r, warning = FALSE}
+start_time <- Sys.time()
+for(species in Species.Trammel) {
+  tmp <- Trammel.long[Trammel.long$Species == species & 
+                        Trammel.long$Month %in% months, ]
+  tmp <- tmp %>%
+    filter(Month >= Selections$`Minimum Month`[Selections$Common == 
+                                                 species] &
+             Month <= Selections$`Maximum Month`[Selections$Common == 
+                                                   species])
+  design <- svydesign(ids = ~ 1, strata = ~ Stratum, 
+                      data = tmp2, check.strata = TRUE)
+  CPUE <- svyby(~ Abundance, by = ~ Year, 
+                design = design, FUN = svymean,
+                vartype = c("se", "ci", "cv"), drop.empty.groups = FALSE)
+  CPUE$Species <- species
+  CPUE.Results.Subset <- rbind(CPUE.Results.Subset, CPUE, row.names = NULL)
+}
+end_time <- Sys.time()
+end_time - start_time
+```
+
+```{r}
+write.csv(CPUE.Results.Subset, 
+          "Annual CPUE by Species - Sub-Setting Sampling to March - December.csv", 
+          row.names = FALSE)
+```
+
+## March - November Sampling
+```{r}
+months <- 3:11
+CPUE.Results.Subset <- data.frame()
+```
+
+```{r, warning = FALSE}
+start_time <- Sys.time()
+for(species in Species.Trammel) {
+  tmp <- Trammel.long[Trammel.long$Species == species & 
+                        Trammel.long$Month %in% months, ]
+  tmp <- tmp %>%
+    filter(Month >= Selections$`Minimum Month`[Selections$Common == 
+                                                 species] &
+             Month <= Selections$`Maximum Month`[Selections$Common == 
+                                                   species])
+  design <- svydesign(ids = ~ 1, strata = ~ Stratum, 
+                      data = tmp2, check.strata = TRUE)
+  CPUE <- svyby(~ Abundance, by = ~ Year, 
+                design = design, FUN = svymean,
+                vartype = c("se", "ci", "cv"), drop.empty.groups = FALSE)
+  CPUE$Species <- species
+  CPUE.Results.Subset <- rbind(CPUE.Results.Subset, CPUE, row.names = NULL)
+}
+end_time <- Sys.time()
+end_time - start_time
+```
+
+```{r}
+write.csv(CPUE.Results.Subset, 
+          "Annual CPUE by Species - Sub-Setting Sampling to March - November.csv", 
+          row.names = FALSE)
+```
