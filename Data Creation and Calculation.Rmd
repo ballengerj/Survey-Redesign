@@ -819,3 +819,510 @@ write.csv(CPUE.Results.Subset,
           "Annual CPUE by Species - Sub-Setting Sampling to March - November.csv", 
           row.names = FALSE)
 ```
+
+## February - December Sampling
+### 10 Months of Sampling Per Year
+```{r}
+months <- 10
+CPUE.Results.Subset <- data.frame()
+```
+
+```{r, warning = FALSE}
+set.seed(1234)
+start_time <- Sys.time()
+for(i in 1:Iter) {
+  tmp <- Trammel.long.nest %>%
+    mutate(data = map2(StratumYear, data, ~ .y %>% 
+                         filter(Month %in% sample(2:12, months)))) %>%
+    unnest()
+  for(species in Species.Trammel) {
+    tmp2 <- tmp[tmp$Species == species, ]
+    tmp2 <- tmp2 %>%
+      filter(Month >= Selections$`Minimum Month`[Selections$Common == 
+                                                   species] &
+               Month <= Selections$`Maximum Month`[Selections$Common == 
+                                                     species])
+    design <- svydesign(ids = ~ 1, strata = ~ Stratum, 
+                        data = tmp2, check.strata = TRUE)
+    CPUE <- svyby(~ Abundance, by = ~ Year, 
+                  design = design, FUN = svymean,
+                  vartype = c("se", "ci", "cv"), drop.empty.groups = FALSE)
+    CPUE$Species <- species
+    CPUE$Run <- i
+    CPUE.Results.Subset <- rbind(CPUE.Results.Subset, CPUE, row.names = NULL)
+  }
+  if(i %% telliter == 0) cat(paste("iteration", i, "complete\n"))
+}
+end_time <- Sys.time()
+end_time - start_time
+```
+
+```{r}
+write.csv(CPUE.Results.Subset, 
+          "Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to February - December and 10 months per year.csv", 
+          row.names = FALSE)
+```
+
+### 9 Months of Sampling Per Year
+```{r}
+months <- 9
+CPUE.Results.Subset <- data.frame()
+```
+
+```{r, warning = FALSE}
+set.seed(1234)
+start_time <- Sys.time()
+for(i in 1:Iter) {
+  tmp <- Trammel.long.nest %>%
+    mutate(data = map2(StratumYear, data, ~ .y %>% 
+                         filter(Month %in% sample(2:12, months)))) %>%
+    unnest()
+  for(species in Species.Trammel) {
+    tmp2 <- tmp[tmp$Species == species, ]
+    tmp2 <- tmp2 %>%
+      filter(Month >= Selections$`Minimum Month`[Selections$Common == 
+                                                   species] &
+               Month <= Selections$`Maximum Month`[Selections$Common == 
+                                                     species])
+    design <- svydesign(ids = ~ 1, strata = ~ Stratum, 
+                        data = tmp2, check.strata = TRUE)
+    CPUE <- svyby(~ Abundance, by = ~ Year, 
+                  design = design, FUN = svymean,
+                  vartype = c("se", "ci", "cv"), drop.empty.groups = FALSE)
+    CPUE$Species <- species
+    CPUE$Run <- i
+    CPUE.Results.Subset <- rbind(CPUE.Results.Subset, CPUE, row.names = NULL)
+  }
+  if(i %% telliter == 0) cat(paste("iteration", i, "complete\n"))
+}
+end_time <- Sys.time()
+end_time - start_time
+```
+
+```{r}
+write.csv(CPUE.Results.Subset, 
+          "Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to February - December and 9 months per year.csv", 
+          row.names = FALSE)
+```
+
+### 8 Months of Sampling Per Year
+```{r}
+months <- 8
+CPUE.Results.Subset <- data.frame()
+```
+
+```{r, warning = FALSE}
+set.seed(1234)
+start_time <- Sys.time()
+for(i in 1:Iter) {
+  tmp <- Trammel.long.nest %>%
+    mutate(data = map2(StratumYear, data, ~ .y %>% 
+                         filter(Month %in% sample(2:12, months)))) %>%
+    unnest()
+  for(species in Species.Trammel) {
+    tmp2 <- tmp[tmp$Species == species, ]
+    tmp2 <- tmp2 %>%
+      filter(Month >= Selections$`Minimum Month`[Selections$Common == 
+                                                   species] &
+               Month <= Selections$`Maximum Month`[Selections$Common == 
+                                                     species])
+    design <- svydesign(ids = ~ 1, strata = ~ Stratum, 
+                        data = tmp2, check.strata = TRUE)
+    CPUE <- svyby(~ Abundance, by = ~ Year, 
+                  design = design, FUN = svymean,
+                  vartype = c("se", "ci", "cv"), drop.empty.groups = FALSE)
+    CPUE$Species <- species
+    CPUE$Run <- i
+    CPUE.Results.Subset <- rbind(CPUE.Results.Subset, CPUE, row.names = NULL)
+  }
+  if(i %% telliter == 0) cat(paste("iteration", i, "complete\n"))
+}
+end_time <- Sys.time()
+end_time - start_time
+```
+
+```{r}
+write.csv(CPUE.Results.Subset, 
+          "Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to February - December and 8 months per year.csv", 
+          row.names = FALSE)
+```
+
+### 7 Months of Sampling Per Year
+```{r}
+months <- 7
+CPUE.Results.Subset <- data.frame()
+```
+
+```{r, warning = FALSE}
+set.seed(1234)
+start_time <- Sys.time()
+for(i in 1:Iter) {
+  tmp <- Trammel.long.nest %>%
+    mutate(data = map2(StratumYear, data, ~ .y %>% 
+                         filter(Month %in% sample(2:12, months)))) %>%
+    unnest()
+  for(species in Species.Trammel) {
+    tmp2 <- tmp[tmp$Species == species, ]
+    tmp2 <- tmp2 %>%
+      filter(Month >= Selections$`Minimum Month`[Selections$Common == 
+                                                   species] &
+               Month <= Selections$`Maximum Month`[Selections$Common == 
+                                                     species])
+    design <- svydesign(ids = ~ 1, strata = ~ Stratum, 
+                        data = tmp2, check.strata = TRUE)
+    CPUE <- svyby(~ Abundance, by = ~ Year, 
+                  design = design, FUN = svymean,
+                  vartype = c("se", "ci", "cv"), drop.empty.groups = FALSE)
+    CPUE$Species <- species
+    CPUE$Run <- i
+    CPUE.Results.Subset <- rbind(CPUE.Results.Subset, CPUE, row.names = NULL)
+  }
+  if(i %% telliter == 0) cat(paste("iteration", i, "complete\n"))
+}
+end_time <- Sys.time()
+end_time - start_time
+```
+
+```{r}
+write.csv(CPUE.Results.Subset, 
+          "Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to February - December and 7 months per year.csv", 
+          row.names = FALSE)
+```
+
+### 6 Months of Sampling Per Year
+```{r}
+months <- 6
+CPUE.Results.Subset <- data.frame()
+```
+
+```{r, warning = FALSE}
+set.seed(1234)
+start_time <- Sys.time()
+for(i in 1:Iter) {
+  tmp <- Trammel.long.nest %>%
+    mutate(data = map2(StratumYear, data, ~ .y %>% 
+                         filter(Month %in% sample(2:12, months)))) %>%
+    unnest()
+  for(species in Species.Trammel) {
+    tmp2 <- tmp[tmp$Species == species, ]
+    tmp2 <- tmp2 %>%
+      filter(Month >= Selections$`Minimum Month`[Selections$Common == 
+                                                   species] &
+               Month <= Selections$`Maximum Month`[Selections$Common == 
+                                                     species])
+    design <- svydesign(ids = ~ 1, strata = ~ Stratum, 
+                        data = tmp2, check.strata = TRUE)
+    CPUE <- svyby(~ Abundance, by = ~ Year, 
+                  design = design, FUN = svymean,
+                  vartype = c("se", "ci", "cv"), drop.empty.groups = FALSE)
+    CPUE$Species <- species
+    CPUE$Run <- i
+    CPUE.Results.Subset <- rbind(CPUE.Results.Subset, CPUE, row.names = NULL)
+  }
+  if(i %% telliter == 0) cat(paste("iteration", i, "complete\n"))
+}
+end_time <- Sys.time()
+end_time - start_time
+```
+
+```{r}
+write.csv(CPUE.Results.Subset, 
+          "Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to February - December and 6 months per year.csv", 
+          row.names = FALSE)
+```
+
+## March - December Sampling
+### 9 Months of Sampling Per Year
+```{r}
+months <- 9
+CPUE.Results.Subset <- data.frame()
+```
+
+```{r, warning = FALSE}
+set.seed(1234)
+start_time <- Sys.time()
+for(i in 1:Iter) {
+  tmp <- Trammel.long.nest %>%
+    mutate(data = map2(StratumYear, data, ~ .y %>% 
+                         filter(Month %in% sample(3:12, months)))) %>%
+    unnest()
+  for(species in Species.Trammel) {
+    tmp2 <- tmp[tmp$Species == species, ]
+    tmp2 <- tmp2 %>%
+      filter(Month >= Selections$`Minimum Month`[Selections$Common == 
+                                                   species] &
+               Month <= Selections$`Maximum Month`[Selections$Common == 
+                                                     species])
+    design <- svydesign(ids = ~ 1, strata = ~ Stratum, 
+                        data = tmp2, check.strata = TRUE)
+    CPUE <- svyby(~ Abundance, by = ~ Year, 
+                  design = design, FUN = svymean,
+                  vartype = c("se", "ci", "cv"), drop.empty.groups = FALSE)
+    CPUE$Species <- species
+    CPUE$Run <- i
+    CPUE.Results.Subset <- rbind(CPUE.Results.Subset, CPUE, row.names = NULL)
+  }
+  if(i %% telliter == 0) cat(paste("iteration", i, "complete\n"))
+}
+end_time <- Sys.time()
+end_time - start_time
+```
+
+```{r}
+write.csv(CPUE.Results.Subset, 
+          "Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to March - December and 9 months per year.csv", 
+          row.names = FALSE)
+```
+
+### 8 Months of Sampling Per Year
+```{r}
+months <- 8
+CPUE.Results.Subset <- data.frame()
+```
+
+```{r, warning = FALSE}
+set.seed(1234)
+start_time <- Sys.time()
+for(i in 1:Iter) {
+  tmp <- Trammel.long.nest %>%
+    mutate(data = map2(StratumYear, data, ~ .y %>% 
+                         filter(Month %in% sample(3:12, months)))) %>%
+    unnest()
+  for(species in Species.Trammel) {
+    tmp2 <- tmp[tmp$Species == species, ]
+    tmp2 <- tmp2 %>%
+      filter(Month >= Selections$`Minimum Month`[Selections$Common == 
+                                                   species] &
+               Month <= Selections$`Maximum Month`[Selections$Common == 
+                                                     species])
+    design <- svydesign(ids = ~ 1, strata = ~ Stratum, 
+                        data = tmp2, check.strata = TRUE)
+    CPUE <- svyby(~ Abundance, by = ~ Year, 
+                  design = design, FUN = svymean,
+                  vartype = c("se", "ci", "cv"), drop.empty.groups = FALSE)
+    CPUE$Species <- species
+    CPUE$Run <- i
+    CPUE.Results.Subset <- rbind(CPUE.Results.Subset, CPUE, row.names = NULL)
+  }
+  if(i %% telliter == 0) cat(paste("iteration", i, "complete\n"))
+}
+end_time <- Sys.time()
+end_time - start_time
+```
+
+```{r}
+write.csv(CPUE.Results.Subset, 
+          "Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to March - December and 8 months per year.csv", 
+          row.names = FALSE)
+```
+
+### 7 Months of Sampling Per Year
+```{r}
+months <- 7
+CPUE.Results.Subset <- data.frame()
+```
+
+```{r, warning = FALSE}
+set.seed(1234)
+start_time <- Sys.time()
+for(i in 1:Iter) {
+  tmp <- Trammel.long.nest %>%
+    mutate(data = map2(StratumYear, data, ~ .y %>% 
+                         filter(Month %in% sample(3:12, months)))) %>%
+    unnest()
+  for(species in Species.Trammel) {
+    tmp2 <- tmp[tmp$Species == species, ]
+    tmp2 <- tmp2 %>%
+      filter(Month >= Selections$`Minimum Month`[Selections$Common == 
+                                                   species] &
+               Month <= Selections$`Maximum Month`[Selections$Common == 
+                                                     species])
+    design <- svydesign(ids = ~ 1, strata = ~ Stratum, 
+                        data = tmp2, check.strata = TRUE)
+    CPUE <- svyby(~ Abundance, by = ~ Year, 
+                  design = design, FUN = svymean,
+                  vartype = c("se", "ci", "cv"), drop.empty.groups = FALSE)
+    CPUE$Species <- species
+    CPUE$Run <- i
+    CPUE.Results.Subset <- rbind(CPUE.Results.Subset, CPUE, row.names = NULL)
+  }
+  if(i %% telliter == 0) cat(paste("iteration", i, "complete\n"))
+}
+end_time <- Sys.time()
+end_time - start_time
+```
+
+```{r}
+write.csv(CPUE.Results.Subset, 
+          "Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to March - December and 7 months per year.csv", 
+          row.names = FALSE)
+```
+
+### 6 Months of Sampling Per Year
+```{r}
+months <- 6
+CPUE.Results.Subset <- data.frame()
+```
+
+```{r, warning = FALSE}
+set.seed(1234)
+start_time <- Sys.time()
+for(i in 1:Iter) {
+  tmp <- Trammel.long.nest %>%
+    mutate(data = map2(StratumYear, data, ~ .y %>% 
+                         filter(Month %in% sample(3:12, months)))) %>%
+    unnest()
+  for(species in Species.Trammel) {
+    tmp2 <- tmp[tmp$Species == species, ]
+    tmp2 <- tmp2 %>%
+      filter(Month >= Selections$`Minimum Month`[Selections$Common == 
+                                                   species] &
+               Month <= Selections$`Maximum Month`[Selections$Common == 
+                                                     species])
+    design <- svydesign(ids = ~ 1, strata = ~ Stratum, 
+                        data = tmp2, check.strata = TRUE)
+    CPUE <- svyby(~ Abundance, by = ~ Year, 
+                  design = design, FUN = svymean,
+                  vartype = c("se", "ci", "cv"), drop.empty.groups = FALSE)
+    CPUE$Species <- species
+    CPUE$Run <- i
+    CPUE.Results.Subset <- rbind(CPUE.Results.Subset, CPUE, row.names = NULL)
+  }
+  if(i %% telliter == 0) cat(paste("iteration", i, "complete\n"))
+}
+end_time <- Sys.time()
+end_time - start_time
+```
+
+```{r}
+write.csv(CPUE.Results.Subset, 
+          "Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to March - December and 6 months per year.csv", 
+          row.names = FALSE)
+```
+
+## March - November Sampling
+### 8 Months of Sampling Per Year
+```{r}
+months <- 8
+CPUE.Results.Subset <- data.frame()
+```
+
+```{r, warning = FALSE}
+set.seed(1234)
+start_time <- Sys.time()
+for(i in 1:Iter) {
+  tmp <- Trammel.long.nest %>%
+    mutate(data = map2(StratumYear, data, ~ .y %>% 
+                         filter(Month %in% sample(3:11, months)))) %>%
+    unnest()
+  for(species in Species.Trammel) {
+    tmp2 <- tmp[tmp$Species == species, ]
+    tmp2 <- tmp2 %>%
+      filter(Month >= Selections$`Minimum Month`[Selections$Common == 
+                                                   species] &
+               Month <= Selections$`Maximum Month`[Selections$Common == 
+                                                     species])
+    design <- svydesign(ids = ~ 1, strata = ~ Stratum, 
+                        data = tmp2, check.strata = TRUE)
+    CPUE <- svyby(~ Abundance, by = ~ Year, 
+                  design = design, FUN = svymean,
+                  vartype = c("se", "ci", "cv"), drop.empty.groups = FALSE)
+    CPUE$Species <- species
+    CPUE$Run <- i
+    CPUE.Results.Subset <- rbind(CPUE.Results.Subset, CPUE, row.names = NULL)
+  }
+  if(i %% telliter == 0) cat(paste("iteration", i, "complete\n"))
+}
+end_time <- Sys.time()
+end_time - start_time
+```
+
+```{r}
+write.csv(CPUE.Results.Subset, 
+          "Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to March - November and 8 months per year.csv", 
+          row.names = FALSE)
+```
+
+### 7 Months of Sampling Per Year
+```{r}
+months <- 7
+CPUE.Results.Subset <- data.frame()
+```
+
+```{r, warning = FALSE}
+set.seed(1234)
+start_time <- Sys.time()
+for(i in 1:Iter) {
+  tmp <- Trammel.long.nest %>%
+    mutate(data = map2(StratumYear, data, ~ .y %>% 
+                         filter(Month %in% sample(3:11, months)))) %>%
+    unnest()
+  for(species in Species.Trammel) {
+    tmp2 <- tmp[tmp$Species == species, ]
+    tmp2 <- tmp2 %>%
+      filter(Month >= Selections$`Minimum Month`[Selections$Common == 
+                                                   species] &
+               Month <= Selections$`Maximum Month`[Selections$Common == 
+                                                     species])
+    design <- svydesign(ids = ~ 1, strata = ~ Stratum, 
+                        data = tmp2, check.strata = TRUE)
+    CPUE <- svyby(~ Abundance, by = ~ Year, 
+                  design = design, FUN = svymean,
+                  vartype = c("se", "ci", "cv"), drop.empty.groups = FALSE)
+    CPUE$Species <- species
+    CPUE$Run <- i
+    CPUE.Results.Subset <- rbind(CPUE.Results.Subset, CPUE, row.names = NULL)
+  }
+  if(i %% telliter == 0) cat(paste("iteration", i, "complete\n"))
+}
+end_time <- Sys.time()
+end_time - start_time
+```
+
+```{r}
+write.csv(CPUE.Results.Subset, 
+          "Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to March - November and 7 months per year.csv", 
+          row.names = FALSE)
+```
+
+### 6 Months of Sampling Per Year
+```{r}
+months <- 6
+CPUE.Results.Subset <- data.frame()
+```
+
+```{r, warning = FALSE}
+set.seed(1234)
+start_time <- Sys.time()
+for(i in 1:Iter) {
+  tmp <- Trammel.long.nest %>%
+    mutate(data = map2(StratumYear, data, ~ .y %>% 
+                         filter(Month %in% sample(3:11, months)))) %>%
+    unnest()
+  for(species in Species.Trammel) {
+    tmp2 <- tmp[tmp$Species == species, ]
+    tmp2 <- tmp2 %>%
+      filter(Month >= Selections$`Minimum Month`[Selections$Common == 
+                                                   species] &
+               Month <= Selections$`Maximum Month`[Selections$Common == 
+                                                     species])
+    design <- svydesign(ids = ~ 1, strata = ~ Stratum, 
+                        data = tmp2, check.strata = TRUE)
+    CPUE <- svyby(~ Abundance, by = ~ Year, 
+                  design = design, FUN = svymean,
+                  vartype = c("se", "ci", "cv"), drop.empty.groups = FALSE)
+    CPUE$Species <- species
+    CPUE$Run <- i
+    CPUE.Results.Subset <- rbind(CPUE.Results.Subset, CPUE, row.names = NULL)
+  }
+  if(i %% telliter == 0) cat(paste("iteration", i, "complete\n"))
+}
+end_time <- Sys.time()
+end_time - start_time
+```
+
+```{r}
+write.csv(CPUE.Results.Subset, 
+          "Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to March - November and 6 months per year.csv", 
+          row.names = FALSE)
+```
