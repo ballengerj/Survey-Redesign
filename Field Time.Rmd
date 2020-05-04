@@ -1,0 +1,264 @@
+---
+title: "Field Time"
+author: "Joseph C. Ballenger, PhD"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    code_folding: "hide"
+    dev: "png"
+    fig_height: 4.5
+    fig_width: 6.5
+    highllight: "tango"
+    keep_md: TRUE
+    smart: TRUE
+    toc: TRUE
+    toc_depth: 2
+    toc_float: TRUE
+    df_print: "paged"
+  pdf_document:
+    toc: TRUE
+    toc_depth: 2
+    fig.width: 13.33
+    fig.height: 7.5
+    fig.crop: TRUE
+    dev: "png"
+    df_print: "tibble"
+    highlight: "tango"
+    keep_tex: TRUE
+---
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+# knitr options setting
+knitr::opts_chunk$set(autodep = TRUE, fig.show = 'asis', fig.width = 13.33,
+                      fig.height = 7.5, dev = "png", tidy = TRUE, 
+                      dev.args = list(type = "windows", family = "serif"), 
+                      dpi = 800, cache = TRUE, message = FALSE, echo = TRUE,
+                      warning = FALSE)
+# Number printing options
+options(digits = 4)
+# Required libraries
+library(tidyverse)
+library(FSA)
+library(extrafont)
+library(readxl)
+library(survey)
+```
+
+```{r}
+fig.width.powerpoint <- 13.33
+fig.height.powerpoint <- 7.5
+fig.width.word.l <- 6.5
+fig.width.word.p <- 9
+fig.height.word.l <- 3.5
+fig.height.word.p <- 6
+
+font.size.word <- 12
+font.size.powerpoint <- 18
+```
+
+```{r}
+Days <- 365
+Weeks <- Days / 7
+Weekdays <- Weeks * 5
+TotalHrs <- Weekdays * 7.5
+Hrs.NoHolidays <- TotalHrs - 7.5*13
+Hrs.LessAL <- Hrs.NoHolidays - 7.5*15
+Hrs.LessSL <- Hrs.LessAL - 7.5*15
+```
+
+```{r}
+CT <- 12
+BR <- 12
+AB <- 10
+AR <- 6
+CH <- 6
+LW <- 6
+MB <- 8
+RH <- 8
+WB <- 10
+
+CM <- 10
+LE <- 8
+UA <- 6
+UC <- 6
+EW <- 10
+```
+
+# Trammel Net
+## Original
+```{r}
+Original.Trammel.Hrs.Person <- (CT + BR) * 4 + (AB + AR + CH + LW + MB + RH + WB) * 12
+Original.Trammel.Hrs.Crew <- Original.Trammel.Hrs.Person * 6
+Original.Trammel.ManYears <- Original.Trammel.Hrs.Crew / Hrs.LessSL
+Original.Trammel.Days <- 2 * 4 + 7 * 12
+```
+
+## February-December; PRS Status Quo
+```{r}
+FebDec.PRSStatusQuo.Trammel.Hrs.Person <- (CT + BR) * 4 + (AB + AR + CH + LW + MB + RH + WB) * 11
+FebDec.PRSStatusQuo.Trammel.Hrs.Crew <- FebDec.PRSStatusQuo.Trammel.Hrs.Person * 6
+FebDec.PRSStatusQuo.Trammel.ManYears <- FebDec.PRSStatusQuo.Trammel.Hrs.Crew / Hrs.LessSL
+FebDec.PRSStatusQuo.Trammel.Days <- 2 * 4 + 7 * 11
+```
+
+## March-December; PRS Status Quo
+```{r}
+MarDec.PRSStatusQuo.Trammel.Hrs.Person <- (CT + BR) * 4 + (AB + AR + CH + LW + MB + RH + WB) * 10
+MarDec.PRSStatusQuo.Trammel.Hrs.Crew <- MarDec.PRSStatusQuo.Trammel.Hrs.Person * 6
+MarDec.PRSStatusQuo.Trammel.ManYears <- MarDec.PRSStatusQuo.Trammel.Hrs.Crew / Hrs.LessSL
+MarDec.PRSStatusQuo.Trammel.Days <- 2 * 4 + 7 * 10
+```
+
+## March-November; PRS Status Quo
+```{r}
+MarNov.PRSStatusQuo.Trammel.Hrs.Person <- (CT + BR) * 4 + (AB + AR + CH + LW + MB + RH + WB) * 9
+MarNov.PRSStatusQuo.Trammel.Hrs.Crew <- MarNov.PRSStatusQuo.Trammel.Hrs.Person * 6
+MarNov.PRSStatusQuo.Trammel.ManYears <- MarNov.PRSStatusQuo.Trammel.Hrs.Crew / Hrs.LessSL
+MarNov.PRSStatusQuo.Trammel.Days <- 2 * 4 + 7 * 9
+```
+
+## 8 Months; PRS Status Quo
+```{r}
+Months8.PRSStatusQuo.Trammel.Hrs.Person <- (CT + BR) * 4 + (AB + AR + CH + LW + MB + RH + WB) * 8
+Months8.PRSStatusQuo.Trammel.Hrs.Crew <- Months8.PRSStatusQuo.Trammel.Hrs.Person * 6
+Months8.PRSStatusQuo.Trammel.ManYears <- Months8.PRSStatusQuo.Trammel.Hrs.Crew / Hrs.LessSL
+Months8.PRSStatusQuo.Trammel.Days <- 2 * 4 + 7 * 8
+```
+
+## 7 Months; PRS Status Quo
+```{r}
+Months7.PRSStatusQuo.Trammel.Hrs.Person <- (CT + BR) * 4 + (AB + AR + CH + LW + MB + RH + WB) * 7
+Months7.PRSStatusQuo.Trammel.Hrs.Crew <- Months7.PRSStatusQuo.Trammel.Hrs.Person * 6
+Months7.PRSStatusQuo.Trammel.ManYears <- Months7.PRSStatusQuo.Trammel.Hrs.Crew / Hrs.LessSL
+Months7.PRSStatusQuo.Trammel.Days <- 2 * 4 + 7 * 7
+```
+
+## 6 Months; PRS Status Quo
+```{r}
+Months6.PRSStatusQuo.Trammel.Hrs.Person <- (CT + BR) * 4 + (AB + AR + CH + LW + MB + RH + WB) * 6
+Months6.PRSStatusQuo.Trammel.Hrs.Crew <- Months6.PRSStatusQuo.Trammel.Hrs.Person * 6
+Months6.PRSStatusQuo.Trammel.ManYears <- Months6.PRSStatusQuo.Trammel.Hrs.Crew / Hrs.LessSL
+Months6.PRSStatusQuo.Trammel.Days <- 2 * 4 + 7 * 6
+```
+
+## 5 Months; PRS Status Quo
+```{r}
+Months5.PRSStatusQuo.Trammel.Hrs.Person <- (CT + BR) * 4 + (AB + AR + CH + LW + MB + RH + WB) * 5
+Months5.PRSStatusQuo.Trammel.Hrs.Crew <- Months5.PRSStatusQuo.Trammel.Hrs.Person * 6
+Months5.PRSStatusQuo.Trammel.ManYears <- Months5.PRSStatusQuo.Trammel.Hrs.Crew / Hrs.LessSL
+Months5.PRSStatusQuo.Trammel.Days <- 2 * 4 + 7 * 5
+```
+
+## Merge Strata; Monthly Sampling; 12 Months
+```{r}
+Months12Merge.Trammel.Hrs.Person <- (CT) * 7 + (AB + AR + CH + LW + MB + WB) * 12
+Months12Merge.Trammel.Hrs.Crew <- Months12Merge.Trammel.Hrs.Person * 6
+Months12Merge.Trammel.ManYears <- Months12Merge.Trammel.Hrs.Crew / Hrs.LessSL
+Months12Merge.Trammel.Days <- 7 * 12
+```
+
+## Merge Strata; Monthly Sampling; 11 Months
+```{r}
+Months11Merge.Trammel.Hrs.Person <- (CT) * 7 + (AB + AR + CH + LW + MB + WB) * 11
+Months11Merge.Trammel.Hrs.Crew <- Months11Merge.Trammel.Hrs.Person * 6
+Months11Merge.Trammel.ManYears <- Months11Merge.Trammel.Hrs.Crew / Hrs.LessSL
+Months11Merge.Trammel.Days <- 7 * 11
+```
+
+## Merge Strata; Monthly Sampling; 10 Months
+```{r}
+Months10Merge.Trammel.Hrs.Person <- (CT) * 7 + (AB + AR + CH + LW + MB + WB) * 10
+Months10Merge.Trammel.Hrs.Crew <- Months10Merge.Trammel.Hrs.Person * 6
+Months10Merge.Trammel.ManYears <- Months10Merge.Trammel.Hrs.Crew / Hrs.LessSL
+Months10Merge.Trammel.Days <- 7 * 10
+```
+
+## Merge Strata; Monthly Sampling; 9 Months
+```{r}
+Months9Merge.Trammel.Hrs.Person <- (CT) * 7 + (AB + AR + CH + LW + MB + WB) * 9
+Months9Merge.Trammel.Hrs.Crew <- Months9Merge.Trammel.Hrs.Person * 6
+Months9Merge.Trammel.ManYears <- Months9Merge.Trammel.Hrs.Crew / Hrs.LessSL
+Months9Merge.Trammel.Days <- 7 * 9
+```
+
+## Merge Strata; Monthly Sampling; 8 Months
+```{r}
+Months8Merge.Trammel.Hrs.Person <- (CT) * 7 + (AB + AR + CH + LW + MB + WB) * 8
+Months8Merge.Trammel.Hrs.Crew <- Months8Merge.Trammel.Hrs.Person * 6
+Months8Merge.Trammel.ManYears <- Months8Merge.Trammel.Hrs.Crew / Hrs.LessSL
+Months8Merge.Trammel.Days <- 7 * 8
+```
+
+## Merge Strata; Monthly Sampling; 7 Months
+```{r}
+Months7Merge.Trammel.Hrs.Person <- (CT) * 7 + (AB + AR + CH + LW + MB + WB) * 7
+Months7Merge.Trammel.Hrs.Crew <- Months7Merge.Trammel.Hrs.Person * 6
+Months7Merge.Trammel.ManYears <- Months7Merge.Trammel.Hrs.Crew / Hrs.LessSL
+Months7Merge.Trammel.Days <- 7 * 7
+```
+
+## Merge Strata; Monthly Sampling; 6 Months
+```{r}
+Months6Merge.Trammel.Hrs.Person <- (CT) * 7 + (AB + AR + CH + LW + MB + WB) * 6
+Months6Merge.Trammel.Hrs.Crew <- Months6Merge.Trammel.Hrs.Person * 6
+Months6Merge.Trammel.ManYears <- Months6Merge.Trammel.Hrs.Crew / Hrs.LessSL
+Months6Merge.Trammel.Days <- 7 * 6
+```
+
+# Electrofishing
+## Original
+```{r}
+Original.Electro.Hrs.Person <- (CM + LE + UA + UC + EW) * 12
+Original.Electro.Hrs.Crew <- Original.Electro.Hrs.Person * 3
+Original.Electro.ManYears <- Original.Electro.Hrs.Crew / Hrs.LessSL
+Original.Electro.Days <- 5 * 12
+```
+
+## Months 11
+```{r}
+Months11.Electro.Hrs.Person <- (CM + LE + UA + UC + EW) * 11
+Months11.Electro.Hrs.Crew <- Months11.Electro.Hrs.Person * 3
+Months11.Electro.ManYears <- Months11.Electro.Hrs.Crew / Hrs.LessSL
+Months11.Electro.Days <- 5 * 11
+```
+
+## Months 10
+```{r}
+Months10.Electro.Hrs.Person <- (CM + LE + UA + UC + EW) * 10
+Months10.Electro.Hrs.Crew <- Months10.Electro.Hrs.Person * 3
+Months10.Electro.ManYears <- Months10.Electro.Hrs.Crew / Hrs.LessSL
+Months10.Electro.Days <- 5 * 10
+```
+
+## Months 9
+```{r}
+Months9.Electro.Hrs.Person <- (CM + LE + UA + UC + EW) * 9
+Months9.Electro.Hrs.Crew <- Months9.Electro.Hrs.Person * 3
+Months9.Electro.ManYears <- Months9.Electro.Hrs.Crew / Hrs.LessSL
+Months9.Electro.Days <- 5 * 9
+```
+
+## Months 8
+```{r}
+Months8.Electro.Hrs.Person <- (CM + LE + UA + UC + EW) * 8
+Months8.Electro.Hrs.Crew <- Months8.Electro.Hrs.Person * 3
+Months8.Electro.ManYears <- Months8.Electro.Hrs.Crew / Hrs.LessSL
+Months8.Electro.Days <- 5 * 8
+```
+
+## Months 7
+```{r}
+Months7.Electro.Hrs.Person <- (CM + LE + UA + UC + EW) * 7
+Months7.Electro.Hrs.Crew <- Months7.Electro.Hrs.Person * 3
+Months7.Electro.ManYears <- Months7.Electro.Hrs.Crew / Hrs.LessSL
+Months7.Electro.Days <- 5 * 7
+```
+
+## Months 6
+```{r}
+öMonths6.Electro.Hrs.Person <- (CM + LE + UA + UC + EW) * 6
+Months6.Electro.Hrs.Crew <- Months6.Electro.Hrs.Person * 3
+Months6.Electro.ManYears <- Months6.Electro.Hrs.Crew / Hrs.LessSL
+Months6.Electro.Days <- 5 * 6
+```
+

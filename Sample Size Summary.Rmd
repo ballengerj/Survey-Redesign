@@ -1,0 +1,429 @@
+---
+title: "Trammel Sampling History"
+author: "Joseph C. Ballenger"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    code_folding: "hide"
+    dev: "png"
+    fig_height: 4.5
+    fig_width: 6.5
+    highllight: "tango"
+    keep_md: TRUE
+    smart: TRUE
+    toc: TRUE
+    toc_depth: 2
+    toc_float: TRUE
+    df_print: "paged"
+  pdf_document:
+    toc: TRUE
+    toc_depth: 2
+    fig.width: 13.33
+    fig.height: 7.5
+    fig.crop: TRUE
+    dev: "png"
+    df_print: "tibble"
+    highlight: "tango"
+    keep_tex: TRUE
+---
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+# knitr options setting
+knitr::opts_chunk$set(autodep = TRUE, fig.show = 'asis', fig.width = 13.33,
+                      fig.height = 7.5, dev = "png", tidy = TRUE, 
+                      dev.args = list(type = "windows", family = "serif"), 
+                      dpi = 800, cache = TRUE, message = FALSE, echo = TRUE,
+                      warning = FALSE)
+# Number printing options
+options(digits = 4)
+# Required libraries
+library(tidyverse)
+library(FSA)
+library(extrafont)
+library(readxl)
+library(survey)
+```
+
+```{r}
+fig.width.powerpoint <- 13.33
+fig.height.powerpoint <- 7.5
+fig.width.word.l <- 6.5
+fig.width.word.p <- 9
+fig.height.word.l <- 3.5
+fig.height.word.p <- 6
+
+font.size.word <- 12
+font.size.powerpoint <- 18
+```
+
+```{r}
+# Initial filtering criteria
+n.samplespermonth <- 60 # Used for identification of appropriate areas
+n.samplingyears <- 5 # Used in identification of appropriate areas
+begdate <- "1991-01-01" # Earliest trammel data considered valid
+enddate <- "2019-12-31"
+crit.depth <- 2 # Critica depth (in meters) that if exceeded would lead to 
+# exclusion of trammel collection
+SelectTide <- c(5:7) # Tidal stages targeted by the trammel net survey - if not 
+# one of these, exclude collection from analysis
+SelectMonths <- c(1:8) # Month to select for the current analysis - if not one
+# of these, exclude collection from analysis
+SelectMRIPArea <- "Inland" # Appropriate MRIP area for consideration
+YearAreaCombos <- c("1991-ACE Basin", "1992-ACE Basin", "1993-ACE Basin", 
+                    "1991-Cape Romain", "1993-Cape Romain", 
+                    "1994-Port Royal Sound", "1998-Port Royal Sound", 
+                    "1999-Port Royal Sound", "1992-Winyah Bay", 
+                    "1993-Winyah Bay", "1994-Winyah Bay", "2001-Winyah Bay", 
+                    "2002-Winyah Bay") # Identification of year-area compbos 
+# to exclude from trammel net analysis
+DeletedSites <- c("0517", "0434", "0058", "0131", "0363", "0231", "0063", 
+                  "0192", "0573", "0051", "0772") # Trammel sites that should be 
+# deleted from analyses
+# Year and stratum combinations that should be deleted from analyses
+YearStratumCombos <- c("1991-AB", "1992-AB", "1993-AB", "1991-AR", "1992-AR",
+                       "1991-BR", "1992-BR", "1993-BR", "1993-BR", "1994-BR",
+                       "1995-BR", "1996-BR", "1997-BR", "1998-BR", "1999-BR",
+                       "2000-BR", "2001-BR", "2002-BR", "2003-BR", "2004-BR",
+                       "2005-BR", "2006-BR", "2007-BR", "2008-BR", "2009-BR",
+                       "1991-CT", "1992-CT", "1993-CT", "1993-CT", "1994-CT",
+                       "1995-CT", "1996-CT", "1997-CT", "1998-CT", "1999-CT",
+                       "2000-CT", "2001-CT", "2002-CT", "2003-CT", "2004-CT",
+                       "2005-CT", "2006-CT", "2007-CT", "2008-CT", "2009-CT",
+                       "1991-CR", "1992-CR", "1993-CR", "1998-CR", "1999-CR",
+                       "2000-CR", "2001-CR", "2002-CR", "2003-CR", "2004-CR",
+                       "2005-CR", "2006-CR", "2007-CR", "2008-CR", "2009-CR",
+                       "2010-CR", "2011-CR", "2012-CR", "2013-CR", "2014-CR",
+                       "2015-CR", "2016-CR", "2017-CR", "2018-CR", "1991-MB",
+                       "1992-MB", "1993-MB", "1994-MB", "1995-MB", "1996-MB",
+                       "1997-MB", "1991-RH", "1992-RH", "1993-RH", "1994-RH", 
+                       "1995-RH", "1996-RH", "1997-RH", "1991-WB", "1992-WB",
+                       "1993-WB", "1994-WB", "1995-WB", "1996-WB", "1997-WB",
+                       "1998-WB", "1999-WB", "2000-WB", "2001-WB", "2002-WB")
+Stratum.Selected <- c("LW", "AR", "WB", "RH", "AB", "MB", "CH", "CR") # The 10 strata (9 current, 1 historical) that we
+# develop relative abundance indices for
+```
+
+```{r }
+# Read in the raw trammel net data and perform some initial data filtering
+setwd('D:/Status of Stocks/Trammel Net/')
+Trammel.Raw <- read_excel("RawTrammelAbundanceData.xlsx", 
+                          sheet = "TrammelAbundance6")
+names(Trammel.Raw) <- c("Collection", names(Trammel.Raw)[-1])
+```
+
+```{r}
+Trammel.Raw <- Trammel.Raw %>%
+  filter(!Site %in% c("0020", "0021", "0097", "0162", "0166", "0175", "0227",
+                      "0240", "0269", "0419", "0490", "0506", "0573", "0593",
+                      "0772"))
+# Assigning Sites to appropriate strata
+# ACE Basin
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0069"] <- "AB"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0165"] <- "AB"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0349"] <- "AB"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0501"] <- "MN"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0502"] <- "MN"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0503"] <- "MN"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0504"] <- "MN"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0517"] <- "AB"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0777"] <- "MN"
+# Cape Romain
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0422"] <- "CR"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0497"] <- "MB"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0511"] <- "RH"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0561"] <- "MB"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0566"] <- "RH"
+# Charleston Harbor
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0004"] <- "AR"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0005"] <- "CH"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0051"] <- "CP"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0063"] <- "CH"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0064"] <- "LW"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0067"] <- "LW"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0068"] <- "LW"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0077"] <- "CH"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0078"] <- "LW"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0131"] <- "MH"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0192"] <- "UW"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0204"] <- "CH"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0214"] <- "CP"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0218"] <- "CH"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0243"] <- "CH"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0265"] <- "CH"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0300"] <- "UW"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0331"] <- "UW"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0454"] <- "CP"
+# MARFIN South (Stono & Kiawah River)
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0042"] <- "MS"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0058"] <- "MS"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0092"] <- "MS"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0453"] <- "MS"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0455"] <- "MS"
+# North Edisto River/ Wadmalaw Rivers
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0431"] <- "NA"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0484"] <- "NA"
+# Port Royal Sound
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0038"] <- "CT"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0055"] <- "CT"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0318"] <- "BR"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0429"] <- "BR"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0476"] <- "BR"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0483"] <- "BR"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0486"] <- "BR"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0491"] <- "BR"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0596"] <- "BR"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0603"] <- "BR"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0604"] <- "BR"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0610"] <- "BR"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0618"] <- "BR"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0524"] <- "CT"
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0602"] <- "CT"
+# Winyah Bay
+Trammel.Raw$Stratum[Trammel.Raw$Site == "0739"] <- "WB"
+```
+
+```{r}
+# Identifying sites in MB (Muddy & Bulls Bays) and Romain Harbor that were also 
+# part of the original Cape Romain strata
+CR.Sites <- c("MB10", "MB11", "MB12", 'MB13', 'MB14', 'MB15', 'MB16', 
+              'MB17', 'MB18', 'RH01', 'RH02', 'RH03', 'RH04', 'RH05',
+              'RH06', 'RH07', 'RH08', 'RH09', 'RH19', 'RH20', 'RH21',
+              'RH22', 'RH23', 'RH24', 'RH25', '0499', '0500', '0507',
+              '0509', '0512', '0542', '0568', '0569', '0570', "0497", 
+              "0498", "0337", "0511", "0566")
+Trammel.Raw <- Trammel.Raw %>%
+    mutate(Stratum = ifelse(Site %in% CR.Sites & 
+                                Date < "1998-01-01",
+                            "CR", Stratum)) 
+rm(CR.Sites)
+```
+
+```{r}
+with(Trammel.Raw, table(Stratum, Year))
+```
+
+```{r}
+Trammel.Summary <- Trammel.Raw %>%
+  select(Stratum, Area, Year) %>%
+  filter(Year >= 2007 & Year < 2020) %>%
+  group_by(Year, Stratum, Area) %>%
+  summarize(n = n()) %>%
+  filter(!Stratum %in% c("AC", "CP", "LE", "MS", "UA", "MN")) %>%
+  ungroup() %>%
+  arrange(Year, Area, Stratum) %>%
+  mutate(Stratum = factor(Stratum, levels = c("CT", "BR", "MN", "AB", "AR", "CH", "LW", "MB", "RH", "WB"),
+                          labels = c("Colleton River", "Broad River", "Morgan Island", "ACE Basin", 
+                                     "Ashley River", "Charleston Harbor", "Wando River", "McClellanville Banks",
+                                     "Cape Romain Harbor", "Winyah Bay")),
+         Area = factor(mapvalues(Area, 
+                                 from = c("AB", "AS", "CH", "CR", "PR", "WB", "WR"),
+                                 to = c("ACE Basin", "Charleston Harbor", "Charleston Harbor", 
+                                        "Cape Romain", "Port Royal Sound", "Winyah Bay", "Charleston Harbor")),
+                       levels = c("Port Royal Sound", "ACE Basin", "Charleston Harbor", "Cape Romain", 
+                                  "Winyah Bay")))
+```
+
+```{r}
+Trammel.Summary2 <- Trammel.Summary %>%
+  group_by(Year) %>%
+  summarize(n = sum(n))
+```
+
+```{r}
+lm1 <- lm(n ~ Year, Trammel.Summary2)
+coef(lm1)
+p1 <- predict(lm1)
+```
+
+```{r, fig.wdith = 13.33, fig.height = 7.5}
+ggplot(Trammel.Summary, aes(x = Year, y = n)) +
+  geom_bar(aes(fill = Area, y = n), stat = "identity", width = 1) +
+  geom_smooth(data = Trammel.Summary2, method = "lm", color = "black",lwd = 2) +
+  theme_bw() +
+  labs(y = "Annual Samples",
+       x = "Year") +
+  theme(legend.position = "top",
+        text = element_text(family = "Calibri", 
+                            size = font.size.powerpoint, 
+                            face = "bold"))
+ggsave("Trammel Collections by Area - w Regression.png", height = fig.height.powerpoint,
+       width = fig.width.powerpoint, device = "png", unit = "in", dpi = 600)
+```
+
+```{r, fig.wdith = 13.33, fig.height = 7.5}
+ggplot(Trammel.Summary, aes(x = Year, y = n)) +
+  geom_bar(aes(fill = Area, y = n), stat = "identity", width = 1) +
+  theme_bw() +
+  labs(y = "Annual Samples",
+       x = "Year") +
+  theme(legend.position = "top",
+        text = element_text(family = "Calibri", 
+                            size = font.size.powerpoint, 
+                            face = "bold"))
+ggsave("Trammel Collections by Area.png", height = fig.height.powerpoint,
+       width = fig.width.powerpoint, device = "png", unit = "in", dpi = 600)
+```
+
+```{r, fig.wdith = 13.33, fig.height = 7.5}
+ggplot(Trammel.Summary, aes(x = Year, y = n)) +
+  geom_bar(aes(fill = Stratum, y = n), stat = "identity", width = 1) +
+  geom_smooth(data = Trammel.Summary2, method = "lm", color = "black",lwd = 2) +
+  theme_bw() +
+  labs(y = "Annual Samples",
+       x = "Year") +
+  theme(legend.position = "top",
+        text = element_text(family = "Calibri", 
+                            size = font.size.powerpoint, 
+                            face = "bold"))
+ggsave("Trammel Collections by Stratum - w Regression.png", height = fig.height.powerpoint,
+       width = fig.width.powerpoint, device = "png", unit = "in", dpi = 600)
+```
+
+```{r, fig.wdith = 13.33, fig.height = 7.5}
+ggplot(Trammel.Summary, aes(x = Year, y = n)) +
+  geom_bar(aes(fill = Stratum, y = n), stat = "identity", width = 1) +
+  theme_bw() +
+  labs(y = "Annual Samples",
+       x = "Year") +
+  theme(legend.position = "top",
+        text = element_text(family = "Calibri", 
+                            size = font.size.powerpoint, 
+                            face = "bold"))
+ggsave("Trammel Collections by Stratum.png", height = fig.height.powerpoint,
+       width = fig.width.powerpoint, device = "png", unit = "in", dpi = 600)
+```
+
+```{r}
+# Electrofishing Analysis criteria
+begdate.electro <- "2001-01-01"
+enddate.electro <- "2019-12-31"
+minduration <- 10
+maxduration <- 30
+SelectTide.electro <- c(1, 2, 5, 6, 7, 8)
+SelectMRIPArea <- "Inland"
+n.samplespermonth <- 3
+n.samplingyears <- 2
+DeletedSites <- c("0656", "0655", "0466", "0658", "0071")
+Stratum.Selected <- c("CM", "LE", "UA", "UC", "EW")
+YearStratumCombos.Electro <- c("1998-EW", "1998-UC", "1999-UC", "1999-EW",
+                               "2000-CM", "2000-EW", "2001-EW", "2002-EW",
+                               "2002-EW")
+```
+
+
+# Electrofishing Raw Data File and Initial Filtering
+```{r}
+# Electrofishing Raw Data
+setwd('D:/Status of Stocks/Electrofishing/')
+Electro.Raw <- read_excel("RawElectrofishingAbundanceData.xlsx", 
+                          sheet = "ElectrofishingAbundance6")
+names(Electro.Raw) <- c("Collection", names(Electro.Raw)[-1])
+Electro.Raw <- Electro.Raw %>%
+  filterD(Date >= begdate.electro) %>%
+  filterD(Date <= enddate.electro) %>%
+  filterD(Area %in% 
+            names(sapply(dimnames(table(Electro.Raw$Year, 
+                                        Electro.Raw$Area))[[2]], 
+                         FUN = function(x) {
+                           length(which(table(Electro.Raw$Year, 
+                                              Electro.Raw$Area)[, x] > 
+                                          n.samplespermonth))
+                         })[sapply(dimnames(table(Electro.Raw$Year, 
+                                                  Electro.Raw$Area))[[2]], 
+                                   FUN = function(x) {
+                                     length(which(
+                                       table(Electro.Raw$Year, 
+                                             Electro.Raw$Area)[, x] > 
+                                         n.samplespermonth))
+                                   }) > n.samplingyears])) %>%
+  mutate(DOY = as.numeric(format(Date, "%j")),
+         Area2 = mapvalues(Area, 
+                           from = c("AB", "AS", "CP", "SA", "WB"),
+                           to = c("ACE Basin", "Charleston Harbor", 
+                                  "Charleston Harbor", 
+                                  "Santee Delta", "Winyah Bay")),
+         YearArea = paste(Year, Area2, sep = "-")) %>%
+  rename(Bowfin = `Note: Family (Bowfins)`) %>%
+  select(Collection:Date, Wave:Duration, DOY:YearArea,
+         25:length(Electro.Raw))
+```
+
+```{r}
+# Assigning Sites to appropriate strata
+# Charleston Harbor
+Electro.Raw$Stratum[Electro.Raw$Site == "0154"] <- "UC"
+Electro.Raw$Stratum[Electro.Raw$Site == "0324"] <- "UC"
+Electro.Raw$Stratum[Electro.Raw$Site == "0411"] <- "UC"
+Electro.Raw$Stratum[Electro.Raw$Site == "0202"] <- "UC"
+# Santee Delta
+Electro.Raw$Stratum[Electro.Raw$Site == "0652"] <- "NS"
+Electro.Raw$Stratum[Electro.Raw$Site == "0653"] <- "NS"
+# Winyah Bay
+Electro.Raw$Stratum[Electro.Raw$Site == "0761"] <- "EW"
+Electro.Raw$Stratum[Electro.Raw$Site == "0842"] <- "EW"
+Electro.Raw$Stratum[Electro.Raw$Site == "0792"] <- "EW"
+Electro.Raw$Stratum[Electro.Raw$Site == "0847"] <- "EW"
+Electro.Raw$Stratum[Electro.Raw$Site == "0872"] <- "EW"
+Electro.Raw$Stratum[Electro.Raw$Site == "0612"] <- "EW"
+```
+
+```{r}
+# Filtering based on strata we develop indices for:
+Electro.Raw <- Electro.Raw  %>%
+  filterD(Stratum %in% Stratum.Selected)
+```
+
+```{r}
+Electro.Summary <- Electro.Raw %>%
+  select(Stratum, Year) %>%
+  filter(Year >= 2007 & Year < 2020) %>%
+  group_by(Year, Stratum) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  arrange(Year, Stratum) %>%
+  mutate(Stratum = factor(Stratum, levels = c("CM", "LE", "UA", "UC", "EW"),
+                          labels = c("Combahee River", "Edisto River", "Ashley River", "Cooper River", 
+                                     "Winyah Bay / Waccamaw River")))
+```
+
+```{r}
+Electro.Summary2 <- Electro.Summary %>%
+  group_by(Year) %>%
+  summarize(n = sum(n))
+```
+
+```{r}
+lm2 <- lm(n ~ Year, Electro.Summary2)
+coef(lm2)
+p2 <- predict(lm2)
+```
+
+```{r, fig.wdith = 13.33, fig.height = 7.5}
+ggplot(Electro.Summary, aes(x = Year, y = n)) +
+  geom_bar(aes(fill = Stratum, y = n), stat = "identity", width = 1) +
+  geom_smooth(data = Electro.Summary2, method = "lm", color = "black",lwd = 2) +
+  theme_bw() +
+  labs(y = "Annual Samples",
+       x = "Year") +
+  theme(legend.position = "top",
+        text = element_text(family = "Calibri", 
+                            size = font.size.powerpoint, 
+                            face = "bold"))
+ggsave("Electrofishing Collections by Stratum - w Regression.png", height = fig.height.powerpoint,
+       width = fig.width.powerpoint, device = "png", unit = "in", dpi = 600)
+```
+
+```{r, fig.wdith = 13.33, fig.height = 7.5}
+ggplot(Electro.Summary, aes(x = Year, y = n)) +
+  geom_bar(aes(fill = Stratum, y = n), stat = "identity", width = 1) +
+  theme_bw() +
+  labs(y = "Annual Samples",
+       x = "Year") +
+  theme(legend.position = "top",
+        text = element_text(family = "Calibri", 
+                            size = font.size.powerpoint, 
+                            face = "bold"))
+ggsave("Electrofishing Collections by Area.png", height = fig.height.powerpoint,
+       width = fig.width.powerpoint, device = "png", unit = "in", dpi = 600)
+```
+

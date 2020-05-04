@@ -1,0 +1,689 @@
+---
+title: "Simulation Plots"
+author: "Joseph C. Ballenger, PhD"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    code_folding: "hide"
+    dev: "png"
+    fig_height: 4.5
+    fig_width: 6.5
+    highllight: "tango"
+    keep_md: TRUE
+    smart: TRUE
+    toc: TRUE
+    toc_depth: 2
+    toc_float: TRUE
+    df_print: "paged"
+  pdf_document:
+    toc: TRUE
+    toc_depth: 2
+    fig.width: 13.33
+    fig.height: 7.5
+    fig.crop: TRUE
+    dev: "png"
+    df_print: "tibble"
+    highlight: "tango"
+    keep_tex: TRUE
+---
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+# knitr options setting
+knitr::opts_chunk$set(autodep = TRUE, fig.show = 'asis', fig.width = 13.33,
+                      fig.height = 7.5, dev = "png", tidy = TRUE, 
+                      dev.args = list(type = "windows", family = "serif"), 
+                      dpi = 800, cache = TRUE, message = FALSE, echo = TRUE,
+                      warning = FALSE)
+# Number printing options
+options(digits = 4)
+# Required libraries
+library(tidyverse)
+library(FSA)
+library(extrafont)
+library(readxl)
+library(survey)
+```
+
+```{r}
+fig.width.powerpoint <- 13.33
+fig.height.powerpoint <- 7.5
+fig.width.word.l <- 6.5
+fig.width.word.p <- 9
+fig.height.word.l <- 3.5
+fig.height.word.p <- 6
+
+font.size.word <- 12
+font.size.powerpoint <- 18
+```
+
+```{r}
+load("Simulation Summaries.Rdata")
+```
+
+# Trammel net
+## CPUE - Matplot
+```{r, fig.width = fig.width.powerpoint, fig.height = fig.height.powerpoint}
+for(species in unique(Trammel.Combined$Species)) {
+  tmp.org <- Trammel.Combined[Trammel.Combined$Species == species & 
+                                Trammel.Combined$Month.SubSample == "Jan-Dec\n12 Months", ]
+  tmp.sub <- Trammel.Combined[Trammel.Combined$Species == species, ]
+  sample <- sample(tmp.sub$Run, 100, replace = FALSE)
+  sample <- c(1, sample)
+  tmp.sub <- tmp.sub[tmp.sub$R %in% sample, ]
+  Subset.plot <- 
+    ggplot(data = tmp.sub, 
+           aes(x = as.numeric(as.character(Year)), y = Abundance)) +
+    geom_line(aes(group = Run), alpha = 0.25) +
+    facet_grid(rows = vars(Months), cols = vars(`Sub-Sampling`)) +
+    annotate(geom = "ribbon",
+             ymin = tmp.org$ci_l, ymax = tmp.org$ci_u, x = tmp.org$Year,
+             alpha = 0.25, colour = NA, fill = "red") +
+    annotate(geom = "line", y = tmp.org$Abundance, x = tmp.org$Year, color = "red") +
+    labs(x = "Year", y = "Catch per Trammel Net",
+         title = paste(species, "Relative Abundance")) +
+    theme_bw() +
+    theme(legend.position = "none",
+          text = element_text(family = "Calibri", 
+                              size = font.size.powerpoint, 
+                              face = "bold"))
+  ggsave(paste("Trammel Net/Plots/CPUE Matplot/", species,
+               " CPUE - Original vs. Subsetting.png",
+               sep = ""),
+         device = "png",
+         width = fig.width.powerpoint,
+         height = fig.height.powerpoint,
+         units = "in", dpi = 600)
+  plot(Subset.plot)
+}
+```
+
+## CPUE - Index Plot
+```{r, fig.width = fig.width.powerpoint, fig.height = fig.height.powerpoint}
+for(species in unique(Trammel.CPUE$Species)) {
+  tmp.org <- Trammel.CPUE[Trammel.CPUE$Species == species & 
+                            Trammel.CPUE$Month.SubSample == "Jan-Dec\n12 Months", ]
+  tmp.sub <- Trammel.CPUE[Trammel.CPUE$Species == species, ]
+  Index.plot <-
+    ggplot(data = tmp.sub) +
+    geom_ribbon(aes(x = Year, ymin = ci_l, ymax = ci_u), fill = "black", alpha = 0.5) +
+    geom_line(aes(x = Year, y = Abundance), color = "black") +
+    facet_grid(rows = vars(Months), cols = vars(`Sub-Sampling`)) +
+    annotate(geom = "ribbon", ymin = tmp.org$ci_l, ymax = tmp.org$ci_u, x = tmp.org$Year, 
+             alpha = 0.5, colour = NA, fill = "red") +
+    annotate(geom = "line", y = tmp.org$Abundance, x = tmp.org$Year, color = "red") +
+    labs(x = "Year", y = "Catch per Trammel Net", 
+         title = paste(species, "Relative Abundance")) +
+    theme_bw() +
+    theme(legend.position = "none",
+          text = element_text(family = "Calibri", 
+                              size = font.size.powerpoint, 
+                              face = "bold"))
+  ggsave(paste("Trammel Net/Plots/CPUE Index Plot/", species,
+               " CPUE - Original vs. Subsetting Relative Abundance Index.png",
+               sep = ""),
+         device = "png",
+         width = fig.width.powerpoint,
+         height = fig.height.powerpoint,
+         units = "in", dpi = 600)
+  plot(Index.plot)
+}
+```
+
+## Annual CV vs. Original CV
+```{r, message = FALSE, error = FALSE, warning = FALSE, fig.width = fig.width.powerpoint, fig.height = fig.height.powerpoint}
+every_nth = function(n) {
+  return(function(x) {x[c(TRUE, rep(FALSE, n - 1))]})
+}
+for(species in unique(Trammel.Combined$Species)) {
+  tmp.org <- Trammel.Combined[Trammel.Combined$Species == species & 
+                                Trammel.Combined$Month.SubSample == "Jan-Dec\n12 Months", ]
+  tmp.sub <- Trammel.Combined[Trammel.Combined$Species == species, ]
+  CV.plot <- ggplot(tmp.sub, aes(x = factor(Year), y = cv)) +
+    geom_boxplot() +
+    annotate(geom = "point", 
+             x = factor(tmp.org$Year), 
+             y = tmp.org$cv, 
+             color = "blue") +
+    labs(x = "Year", y = "Coefficient of Variation",
+         title = paste(species, "Annual Coefficient of Variation")) +
+    theme_bw() +
+    theme(legend.position = "none",
+          text = element_text(family = "Calibri", 
+                              size = font.size.powerpoint, 
+                              face = "bold"),
+          axis.text.x = element_text(angle = 90, vjust = 0.4)) +
+    facet_grid(rows = vars(Months), cols = vars(`Sub-Sampling`)) +
+    scale_x_discrete(breaks = every_nth(n = 5), )
+    
+  ggsave(paste("Trammel Net/Plots/Annual CV by Species/", species, 
+               " Annual CV - Original (Blue Dot) vs. Subsetting.png", 
+               sep = ""),
+         device = "png", 
+         width = fig.width.powerpoint, 
+         height = fig.height.powerpoint, 
+         units = "in", dpi = 600)
+  plot(CV.plot)
+}
+```
+
+## Change in Median Annual CV by Species
+### Change in CV
+```{r, warning = FALSE, fig.width = fig.width.powerpoint, fig.height = fig.height.powerpoint}
+for(species in unique(Trammel.Summary$Species)) {
+CV.plot <- ggplot(Trammel.Summary[Trammel.Summary$Species == species, ], 
+                  aes(x = Month.SubSample, y = Median.CV, group = Month.SubSample)) +
+  geom_point() +
+  labs(x = "Design Change", y = "Coefficient of Variation",
+       title = paste(species, "Median Coefficient of Variation")) +
+  theme_bw() +
+  theme(legend.position = "none",
+        text = element_text(family = "Calibri", 
+                            size = font.size.powerpoint, 
+                            face = "bold"),
+        axis.text.x = element_text(angle = 90, vjust = 0.2))
+ggsave(paste("Trammel Net/Plots/Median CV by Species/", species, 
+             " CV - Overhaul Options.png", 
+             sep = ""),
+       device = "png", 
+       width = fig.width.powerpoint, 
+       height = fig.height.powerpoint, 
+       units = "in", dpi = 600)
+plot(CV.plot)
+}
+```
+
+## Relative Change
+```{r, warning = FALSE, fig.width = fig.width.powerpoint, fig.height = fig.height.powerpoint}
+for(species in unique(Trammel.Summary$Species)) {
+CV.plot <- ggplot(Trammel.Summary[Trammel.Summary$Species == species, ], 
+                  aes(x = Month.SubSample, y = Relative.CV, group = Month.SubSample)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(x = "Design Change", y = "Relative Change in CV",
+       title = paste(species, "% Change in CV")) +
+  theme_bw() +
+  theme(legend.position = "none",
+        text = element_text(family = "Calibri", 
+                            size = font.size.powerpoint, 
+                            face = "bold"),
+        axis.text.x = element_text(angle = 90, vjust = 0.2))
+ggsave(paste("Trammel Net/Plots/Median CV by Species/", species, 
+             " CV - Overhaul Options - Relative Change in CV.png", 
+             sep = ""),
+       device = "png", 
+       width = fig.width.powerpoint, 
+       height = fig.height.powerpoint, 
+       units = "in", dpi = 600)
+plot(CV.plot)
+}
+```
+
+### Boxplots 
+```{r, warning = FALSE, fig.width = fig.width.powerpoint, fig.height = fig.height.powerpoint}
+for(species in unique(Trammel.Combined$Species)) {
+  df <- Trammel.Combined[Trammel.Combined$Species == species, ] %>%
+    group_by(Species, Month.SubSample, Year) %>%
+    summarize(cv = median(cv)) %>%
+    ungroup()
+  CV.plot <- ggplot(df, aes(x = Month.SubSample, y = cv)) +
+    geom_boxplot() +
+    labs(x = "Design Change", y = "Coefficient of Variation",
+         title = paste(species, "Coefficient of Variation")) +
+    theme_bw() +
+    theme(legend.position = "none",
+          text = element_text(family = "Calibri", 
+                              size = font.size.powerpoint, 
+                              face = "bold"),
+          axis.text.x = element_text(angle = 90, vjust = 0.3))
+  ggsave(paste("Trammel Net/Plots/Median CV by Species/", species, 
+               " CV - Overhaul Options - Boxplots.png", 
+               sep = ""),
+         device = "png", 
+         width = fig.width.powerpoint, 
+         height = fig.height.powerpoint, 
+         units = "in", dpi = 600)
+  plot(CV.plot)
+}
+```
+
+### CVs Across Species
+#### Box Plot
+```{r, warning = FALSE, fig.width = fig.width.powerpoint, fig.height = fig.height.powerpoint}
+CV.plot <- ggplot(Trammel.Combined %>%
+                    group_by(Species, Month.SubSample, Year) %>%
+                    summarize(cv = median(cv, na.rm = TRUE)) %>%
+                    ungroup() %>%
+                    group_by(Month.SubSample, Year) %>%
+                    summarize(cv = median(cv, na.rm = TRUE)) %>%
+                    ungroup(), 
+                  aes(x = Month.SubSample, y = cv)) +
+  geom_boxplot() +
+  labs(x = "Design Change", y = "Coefficient of Variation",
+       title = "Coefficient of Variation") +
+  theme_bw() +
+  theme(legend.position = "none",
+        text = element_text(family = "Calibri", 
+                            size = font.size.powerpoint, 
+                            face = "bold"),
+        axis.text.x = element_text(angle = 90, vjust = 0.3))
+ggsave(paste("Trammel Net/Plots/Median CV Species Combined/", "CV Across All Species - Boxplots.png", 
+             sep = ""),
+       device = "png", 
+       width = fig.width.powerpoint, 
+       height = fig.height.powerpoint, 
+       units = "in", dpi = 600)
+plot(CV.plot)
+```
+
+#### Relative Change
+```{r, warning = FALSE, fig.width = fig.width.powerpoint, fig.height = fig.height.powerpoint}
+CV.plot <- ggplot(Trammel.Combined %>%
+                    group_by(Species, Month.SubSample, Year) %>%
+                    summarize(cv = median(cv, na.rm = TRUE)) %>%
+                    ungroup() %>%
+                    group_by(Month.SubSample, Year) %>%
+                    summarize(cv = median(cv, na.rm = TRUE)) %>%
+                    ungroup() %>%
+                    group_by(Month.SubSample) %>%
+                    summarize(cv = median(cv, na.rm = TRUE)) %>%
+                    ungroup() %>%
+                    mutate(Relative.cv = (cv / first(cv) - 1) * 100),
+                  aes(x = Month.SubSample, y = Relative.cv)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(x = "Design Change", y = "Coefficient of Variation",
+       title = "Relative Change in CV") +
+  theme_bw() +
+  theme(legend.position = "none",
+        text = element_text(family = "Calibri", 
+                            size = font.size.powerpoint, 
+                            face = "bold"),
+        axis.text.x = element_text(angle = 90, vjust = 0.3))
+ggsave(paste("Trammel Net/Plots/Median CV Species Combined/", "CV Across All Species - Relative Change.png", 
+             sep = ""),
+       device = "png", 
+       width = fig.width.powerpoint, 
+       height = fig.height.powerpoint, 
+       units = "in", dpi = 600)
+plot(CV.plot)
+```
+
+
+
+### CVs Across Recreationally Important Finfish
+#### Box Plot
+```{r, warning = FALSE, fig.width = fig.width.powerpoint, fig.height = fig.height.powerpoint}
+Trammel.SelectSpecies <- c("Red Drum", "Spotted Seatrout", "Spot", "Southern Flounder",
+                           "Black Drum", "Atlantic Croaker", "Sheepshead", "Southern Kingfish",
+                           "Bluefish")
+CV.plot <- ggplot(Trammel.Combined[Trammel.Combined$Species %in% Trammel.SelectSpecies, ] %>%
+                    group_by(Species, Month.SubSample, Year) %>%
+                    summarize(cv = median(cv, na.rm = TRUE)) %>%
+                    ungroup() %>%
+                    group_by(Month.SubSample, Year) %>%
+                    summarize(cv = median(cv, na.rm = TRUE)) %>%
+                    ungroup(), 
+                  aes(x = Month.SubSample, y = cv)) +
+  geom_boxplot() +
+  labs(x = "Overhaul Strategy", y = "Coefficient of Variation",
+       title = "Coefficient of Variation") +
+  theme_bw() +
+  theme(legend.position = "none",
+        text = element_text(family = "Calibri", 
+                            size = font.size.powerpoint, 
+                            face = "bold"),
+        axis.text.x = element_text(angle = 90, vjust = 0.3))
+ggsave(paste("Trammel Net/Plots/Median CV Species Combined/", "CV Across Select Species - Boxplots.png", 
+             sep = ""),
+       device = "png", 
+       width = fig.width.powerpoint, 
+       height = fig.height.powerpoint, 
+       units = "in", dpi = 600)
+plot(CV.plot)
+```
+
+#### Relative Change
+```{r, warning = FALSE, fig.width = fig.width.powerpoint, fig.height = fig.height.powerpoint}
+CV.plot <- ggplot(Trammel.Combined[Trammel.Combined$Species %in% Trammel.SelectSpecies, ] %>%
+                    group_by(Species, Month.SubSample, Year) %>%
+                    summarize(cv = median(cv, na.rm = TRUE)) %>%
+                    ungroup() %>%
+                    group_by(Month.SubSample, Year) %>%
+                    summarize(cv = median(cv, na.rm = TRUE)) %>%
+                    ungroup() %>%
+                    group_by(Month.SubSample) %>%
+                    summarize(cv = median(cv, na.rm = TRUE)) %>%
+                    ungroup() %>%
+                    mutate(Relative.cv = (cv / first(cv) - 1) * 100),
+                  aes(x = Month.SubSample, y = Relative.cv)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(x = "Design Change", y = "Coefficient of Variation",
+       title = "Relative Change in CV") +
+  theme_bw() +
+  theme(legend.position = "none",
+        text = element_text(family = "Calibri", 
+                            size = font.size.powerpoint, 
+                            face = "bold"),
+        axis.text.x = element_text(angle = 90, vjust = 0.3))
+ggsave(paste("Trammel Net/Plots/Median CV Species Combined/", "CV Across Select Species - Relative Change.png", 
+             sep = ""),
+       device = "png", 
+       width = fig.width.powerpoint, 
+       height = fig.height.powerpoint, 
+       units = "in", dpi = 600)
+plot(CV.plot)
+```
+
+# Electrofishing
+## CPUE - Matplot
+```{r, fig.width = fig.width.powerpoint, fig.height = fig.height.powerpoint}
+for(species in unique(Electro.Combined$Species)) {
+  tmp.org <- Electro.Combined[Electro.Combined$Species == species & 
+                                Electro.Combined$Month.SubSample == "Jan-Dec\n12 Months", ]
+  tmp.sub <- Electro.Combined[Electro.Combined$Species == species, ]
+  sample <- sample(tmp.sub$Run, 100, replace = FALSE)
+  sample <- c(1, sample)
+  tmp.sub <- tmp.sub[tmp.sub$R %in% sample, ]
+  Subset.plot <- 
+    ggplot(data = tmp.sub, 
+           aes(x = as.numeric(as.character(Year)), y = Abundance)) +
+    geom_line(aes(group = Run), alpha = 0.25) +
+    facet_grid(rows = vars(Months), cols = vars(`Sub-Sampling`)) +
+    annotate(geom = "ribbon",
+             ymin = tmp.org$ci_l, ymax = tmp.org$ci_u, x = tmp.org$Year,
+             alpha = 0.25, colour = NA, fill = "red") +
+    annotate(geom = "line", y = tmp.org$Abundance, x = tmp.org$Year, color = "red") +
+    labs(x = "Year", y = "Catch per Electrofishing",
+         title = paste(species, "Relative Abundance")) +
+    theme_bw() +
+    theme(legend.position = "none",
+          text = element_text(family = "Calibri", 
+                              size = font.size.powerpoint, 
+                              face = "bold"))
+  ggsave(paste("Electrofishing/Plots/CPUE Matplot/", species,
+               " CPUE - Original vs. Subsetting.png",
+               sep = ""),
+         device = "png",
+         width = fig.width.powerpoint,
+         height = fig.height.powerpoint,
+         units = "in", dpi = 600)
+  plot(Subset.plot)
+}
+```
+
+## CPUE - Index Plot
+```{r, fig.width = fig.width.powerpoint, fig.height = fig.height.powerpoint}
+for(species in unique(Electro.CPUE$Species)) {
+  tmp.org <- Electro.CPUE[Electro.CPUE$Species == species & 
+                            Electro.CPUE$Month.SubSample == "Jan-Dec\n12 Months", ]
+  tmp.sub <- Electro.CPUE[Electro.CPUE$Species == species, ]
+  Index.plot <-
+    ggplot(data = tmp.sub) +
+    geom_ribbon(aes(x = Year, ymin = ci_l, ymax = ci_u), fill = "black", alpha = 0.5) +
+    geom_line(aes(x = Year, y = Abundance), color = "black") +
+    facet_grid(rows = vars(Months), cols = vars(`Sub-Sampling`)) +
+    annotate(geom = "ribbon", ymin = tmp.org$ci_l, ymax = tmp.org$ci_u, x = tmp.org$Year, 
+             alpha = 0.5, colour = NA, fill = "red") +
+    annotate(geom = "line", y = tmp.org$Abundance, x = tmp.org$Year, color = "red") +
+    labs(x = "Year", y = "Catch per Electrofishing", 
+         title = paste(species, "Relative Abundance")) +
+    theme_bw() +
+    theme(legend.position = "none",
+          text = element_text(family = "Calibri", 
+                              size = font.size.powerpoint, 
+                              face = "bold"))
+  ggsave(paste("Electrofishing/Plots/CPUE Index Plot/", species,
+               " CPUE - Original vs. Subsetting Relative Abundance Index.png",
+               sep = ""),
+         device = "png",
+         width = fig.width.powerpoint,
+         height = fig.height.powerpoint,
+         units = "in", dpi = 600)
+  plot(Index.plot)
+}
+```
+
+## Annual CV vs. Original CV
+```{r, message = FALSE, error = FALSE, warning = FALSE, fig.width = fig.width.powerpoint, fig.height = fig.height.powerpoint}
+for(species in unique(Electro.Combined$Species)) {
+  tmp.org <- Electro.Combined[Electro.Combined$Species == species & 
+                                Electro.Combined$Month.SubSample == "Jan-Dec\n12 Months", ]
+  tmp.sub <- Electro.Combined[Electro.Combined$Species == species, ]
+  CV.plot <- ggplot(tmp.sub, aes(x = factor(Year), y = cv)) +
+    geom_boxplot() +
+    annotate(geom = "point", 
+             x = factor(tmp.org$Year), 
+             y = tmp.org$cv, 
+             color = "blue") +
+    labs(x = "Year", y = "Coefficient of Variation",
+         title = paste(species, "Annual Coefficient of Variation")) +
+    theme_bw() +
+    theme(legend.position = "none",
+          text = element_text(family = "Calibri", 
+                              size = font.size.powerpoint, 
+                              face = "bold"),
+          axis.text.x = element_text(angle = 90, vjust = 0.4)) +
+    facet_grid(rows = vars(Months), cols = vars(`Sub-Sampling`)) +
+    scale_x_discrete(breaks = every_nth(n = 5), )
+    
+  ggsave(paste("Electrofishing/Plots/Annual CV by Species/", species, 
+               " Annual CV - Original (Blue Dot) vs. Subsetting.png", 
+               sep = ""),
+         device = "png", 
+         width = fig.width.powerpoint, 
+         height = fig.height.powerpoint, 
+         units = "in", dpi = 600)
+  plot(CV.plot)
+}
+```
+
+## Change in Median Annual CV by Species
+### Change in CV
+```{r, warning = FALSE, fig.width = fig.width.powerpoint, fig.height = fig.height.powerpoint}
+for(species in unique(Electro.Summary$Species)) {
+CV.plot <- ggplot(Electro.Summary[Electro.Summary$Species == species, ], 
+                  aes(x = Month.SubSample, y = Median.CV, group = Month.SubSample)) +
+  geom_point() +
+  labs(x = "Design Change", y = "Coefficient of Variation",
+       title = paste(species, "Median Coefficient of Variation")) +
+  theme_bw() +
+  theme(legend.position = "none",
+        text = element_text(family = "Calibri", 
+                            size = font.size.powerpoint, 
+                            face = "bold"),
+        axis.text.x = element_text(angle = 90, vjust = 0.2))
+ggsave(paste("Electrofishing/Plots/Median CV by Species/", species, 
+             " CV - Overhaul Options.png", 
+             sep = ""),
+       device = "png", 
+       width = fig.width.powerpoint, 
+       height = fig.height.powerpoint, 
+       units = "in", dpi = 600)
+plot(CV.plot)
+}
+```
+
+## Relative Change
+```{r, warning = FALSE, fig.width = fig.width.powerpoint, fig.height = fig.height.powerpoint}
+for(species in unique(Electro.Summary$Species)) {
+CV.plot <- ggplot(Electro.Summary[Electro.Summary$Species == species, ], 
+                  aes(x = Month.SubSample, y = Relative.CV, group = Month.SubSample)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(x = "Design Change", y = "Relative Change in CV",
+       title = paste(species, "% Change in CV")) +
+  theme_bw() +
+  theme(legend.position = "none",
+        text = element_text(family = "Calibri", 
+                            size = font.size.powerpoint, 
+                            face = "bold"),
+        axis.text.x = element_text(angle = 90, vjust = 0.2))
+ggsave(paste("Electrofishing/Plots/Median CV by Species/", species, 
+             " CV - Overhaul Options - Relative Change in CV.png", 
+             sep = ""),
+       device = "png", 
+       width = fig.width.powerpoint, 
+       height = fig.height.powerpoint, 
+       units = "in", dpi = 600)
+plot(CV.plot)
+}
+```
+
+### Boxplots 
+```{r, warning = FALSE, fig.width = fig.width.powerpoint, fig.height = fig.height.powerpoint}
+for(species in unique(Electro.Combined$Species)) {
+  df <- Electro.Combined[Electro.Combined$Species == species, ] %>%
+    group_by(Species, Month.SubSample, Year) %>%
+    summarize(cv = median(cv)) %>%
+    ungroup()
+  CV.plot <- ggplot(df, aes(x = Month.SubSample, y = cv)) +
+    geom_boxplot() +
+    labs(x = "Design Change", y = "Coefficient of Variation",
+         title = paste(species, "Coefficient of Variation")) +
+    theme_bw() +
+    theme(legend.position = "none",
+          text = element_text(family = "Calibri", 
+                              size = font.size.powerpoint, 
+                              face = "bold"),
+          axis.text.x = element_text(angle = 90, vjust = 0.3))
+  ggsave(paste("Electrofishing/Plots/Median CV by Species/", species, 
+               " CV - Overhaul Options - Boxplots.png", 
+               sep = ""),
+         device = "png", 
+         width = fig.width.powerpoint, 
+         height = fig.height.powerpoint, 
+         units = "in", dpi = 600)
+  plot(CV.plot)
+}
+```
+
+### CVs Across Species
+#### Box Plot
+```{r, warning = FALSE, fig.width = fig.width.powerpoint, fig.height = fig.height.powerpoint}
+CV.plot <- ggplot(Electro.Combined %>%
+                    group_by(Species, Month.SubSample, Year) %>%
+                    summarize(cv = median(cv, na.rm = TRUE)) %>%
+                    ungroup() %>%
+                    group_by(Month.SubSample, Year) %>%
+                    summarize(cv = median(cv, na.rm = TRUE)) %>%
+                    ungroup(), 
+                  aes(x = Month.SubSample, y = cv)) +
+  geom_boxplot() +
+  labs(x = "Design Change", y = "Coefficient of Variation",
+       title = "Coefficient of Variation") +
+  theme_bw() +
+  theme(legend.position = "none",
+        text = element_text(family = "Calibri", 
+                            size = font.size.powerpoint, 
+                            face = "bold"),
+        axis.text.x = element_text(angle = 90, vjust = 0.3))
+ggsave(paste("Electrofishing/Plots/Median CV Species Combined/", "CV Across All Species - Boxplots.png", 
+             sep = ""),
+       device = "png", 
+       width = fig.width.powerpoint, 
+       height = fig.height.powerpoint, 
+       units = "in", dpi = 600)
+plot(CV.plot)
+```
+
+#### Relative Change
+```{r, warning = FALSE, fig.width = fig.width.powerpoint, fig.height = fig.height.powerpoint}
+CV.plot <- ggplot(Electro.Combined %>%
+                    group_by(Species, Month.SubSample, Year) %>%
+                    summarize(cv = median(cv, na.rm = TRUE)) %>%
+                    ungroup() %>%
+                    group_by(Month.SubSample, Year) %>%
+                    summarize(cv = median(cv, na.rm = TRUE)) %>%
+                    ungroup() %>%
+                    group_by(Month.SubSample) %>%
+                    summarize(cv = median(cv, na.rm = TRUE)) %>%
+                    ungroup() %>%
+                    mutate(Relative.cv = (cv / first(cv) - 1) * 100),
+                  aes(x = Month.SubSample, y = Relative.cv)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(x = "Design Change", y = "Coefficient of Variation",
+       title = "Relative Change in CV") +
+  theme_bw() +
+  theme(legend.position = "none",
+        text = element_text(family = "Calibri", 
+                            size = font.size.powerpoint, 
+                            face = "bold"),
+        axis.text.x = element_text(angle = 90, vjust = 0.3))
+ggsave(paste("Electrofishing/Plots/Median CV Species Combined/", "CV Across All Species - Relative Change.png", 
+             sep = ""),
+       device = "png", 
+       width = fig.width.powerpoint, 
+       height = fig.height.powerpoint, 
+       units = "in", dpi = 600)
+plot(CV.plot)
+```
+
+### CVs Across Recreationally Important Finfish
+#### Box Plot
+```{r, warning = FALSE, fig.width = fig.width.powerpoint, fig.height = fig.height.powerpoint}
+Electro.SelectSpecies <- c("Red Drum", "American Eel", "Southern Flounder", "Atlantic Croaker",
+                           "Spotted Seatrout", "Striped Bass")
+CV.plot <- ggplot(Electro.Combined[Electro.Combined$Species %in% Electro.SelectSpecies, ] %>%
+                    group_by(Species, Month.SubSample, Year) %>%
+                    summarize(cv = median(cv, na.rm = TRUE)) %>%
+                    ungroup() %>%
+                    group_by(Month.SubSample, Year) %>%
+                    summarize(cv = median(cv, na.rm = TRUE)) %>%
+                    ungroup(), 
+                  aes(x = Month.SubSample, y = cv)) +
+  geom_boxplot() +
+  labs(x = "Overhaul Strategy", y = "Coefficient of Variation",
+       title = "Coefficient of Variation") +
+  theme_bw() +
+  theme(legend.position = "none",
+        text = element_text(family = "Calibri", 
+                            size = font.size.powerpoint, 
+                            face = "bold"),
+        axis.text.x = element_text(angle = 90, vjust = 0.3))
+ggsave(paste("Electrofishing/Plots/Median CV Species Combined/", "CV Across Select Species - Boxplots.png", 
+             sep = ""),
+       device = "png", 
+       width = fig.width.powerpoint, 
+       height = fig.height.powerpoint, 
+       units = "in", dpi = 600)
+plot(CV.plot)
+```
+
+#### Relative Change
+```{r, warning = FALSE, fig.width = fig.width.powerpoint, fig.height = fig.height.powerpoint}
+CV.plot <- ggplot(Electro.Combined[Electro.Combined$Species %in% Electro.SelectSpecies, ] %>%
+                    group_by(Species, Month.SubSample, Year) %>%
+                    summarize(cv = median(cv, na.rm = TRUE)) %>%
+                    ungroup() %>%
+                    group_by(Month.SubSample, Year) %>%
+                    summarize(cv = median(cv, na.rm = TRUE)) %>%
+                    ungroup() %>%
+                    group_by(Month.SubSample) %>%
+                    summarize(cv = median(cv, na.rm = TRUE)) %>%
+                    ungroup() %>%
+                    mutate(Relative.cv = (cv / first(cv) - 1) * 100),
+                  aes(x = Month.SubSample, y = Relative.cv)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(x = "Design Change", y = "Coefficient of Variation",
+       title = "Relative Change in CV") +
+  theme_bw() +
+  theme(legend.position = "none",
+        text = element_text(family = "Calibri", 
+                            size = font.size.powerpoint, 
+                            face = "bold"),
+        axis.text.x = element_text(angle = 90, vjust = 0.3))
+ggsave(paste("Electrofishing/Plots/Median CV Species Combined/", "CV Across Select Species - Relative Change.png", 
+             sep = ""),
+       device = "png", 
+       width = fig.width.powerpoint, 
+       height = fig.height.powerpoint, 
+       units = "in", dpi = 600)
+plot(CV.plot)
+```
+
+
+
+

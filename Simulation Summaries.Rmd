@@ -1,0 +1,1952 @@
+---
+title: 'Survey Change Investigation'
+author: "Joseph C. Ballenger, PhD"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    code_folding: "hide"
+    dev: "png"
+    fig_height: 4.5
+    fig_width: 6.5
+    highllight: "tango"
+    keep_md: TRUE
+    smart: TRUE
+    toc: TRUE
+    toc_depth: 2
+    toc_float: TRUE
+    df_print: "paged"
+  pdf_document:
+    toc: TRUE
+    toc_depth: 2
+    fig.width: 13.33
+    fig.height: 7.5
+    fig.crop: TRUE
+    dev: "png"
+    df_print: "tibble"
+    highlight: "tango"
+    keep_tex: TRUE
+---
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+# knitr options setting
+knitr::opts_chunk$set(autodep = TRUE, fig.show = 'asis', fig.width = 13.33,
+                      fig.height = 7.5, dev = "png", tidy = TRUE, 
+                      dev.args = list(type = "windows", family = "serif"), 
+                      dpi = 800, cache = TRUE, message = FALSE, echo = TRUE,
+                      warning = FALSE)
+# Number printing options
+options(digits = 4)
+# Required libraries
+library(tidyverse)
+library(FSA)
+library(extrafont)
+library(readxl)
+library(survey)
+```
+
+```{r}
+fig.width.powerpoint <- 13.33
+fig.height.powerpoint <- 7.5
+fig.width.word.l <- 6.5
+fig.width.word.p <- 9
+fig.height.word.l <- 3.5
+fig.height.word.p <- 6
+
+font.size.word <- 12
+font.size.powerpoint <- 18
+```
+
+# Data Sets
+## Trammel
+```{r}
+setwd("D:/Estuarine Finfish Research/Survey-Redesign/Trammel Net")
+Trammel.Original <- read.csv("Annual CPUE by Species - Original.csv")
+Trammel.All.6 <- read.csv("Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to 6 months.csv")
+Trammel.All.7 <- read.csv("Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to 7 months.csv")
+Trammel.All.8 <- read.csv("Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to 8 months.csv")
+Trammel.All.9 <- read.csv("Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to 9 months.csv")
+Trammel.All.10 <- read.csv("Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to 10 months.csv")
+Trammel.All.11 <- read.csv("Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to 11 months.csv")
+Trammel.FebDec <- read.csv("Annual CPUE by Species - Sub-Setting Sampling to February - December.csv")
+Trammel.FebDec.6 <- read.csv("Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to February - December and 6 months per year.csv")
+Trammel.FebDec.7 <- read.csv("Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to February - December and 7 months per year.csv")
+Trammel.FebDec.8 <- read.csv("Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to February - December and 8 months per year.csv")
+Trammel.FebDec.9 <- read.csv("Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to February - December and 9 months per year.csv")
+Trammel.FebDec.10 <- read.csv("Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to February - December and 10 months per year.csv")
+Trammel.MarDec <- read.csv("Annual CPUE by Species - Sub-Setting Sampling to March - December.csv")
+Trammel.MarDec.6 <- read.csv("Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to March - December and 6 months per year.csv")
+Trammel.MarDec.7 <- read.csv("Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to March - December and 7 months per year.csv")
+Trammel.MarDec.8 <- read.csv("Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to March - December and 8 months per year.csv")
+Trammel.MarDec.9 <- read.csv("Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to March - December and 9 months per year.csv")
+Trammel.MarNov <- read.csv("Annual CPUE by Species - Sub-Setting Sampling to March - November.csv")
+Trammel.MarNov.6 <- read.csv("Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to March - November and 6 months per year.csv")
+Trammel.MarNov.7 <- read.csv("Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to March - November and 7 months per year.csv")
+Trammel.MarNov.8 <- read.csv("Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to March - November and 8 months per year.csv")
+```
+
+## Electrofishing
+```{r}
+setwd("D:/Estuarine Finfish Research/Survey-Redesign/Electrofishing")
+Electro.Original <- read.csv("Annual CPUE by Species - Original - Electrofishing.csv")
+Electro.All.6 <- read.csv("Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to 6 months - Electrofishing.csv")
+Electro.All.7 <- read.csv("Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to 7 months - Electrofishing.csv")
+Electro.All.8 <- read.csv("Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to 8 months - Electrofishing.csv")
+Electro.All.9 <- read.csv("Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to 9 months - Electrofishing.csv")
+Electro.All.10 <- read.csv("Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to 10 months - Electrofishing.csv")
+Electro.All.11 <- read.csv("Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to 11 months - Electrofishing.csv")
+Electro.FebDec <- read.csv("Annual CPUE by Species - Sub-Setting Sampling to February - December - Electrofishing.csv")
+Electro.FebDec.6 <- read.csv("Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to February - December and 6 months per year - Electrofishing.csv")
+Electro.FebDec.7 <- read.csv("Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to February - December and 7 months per year - Electrofishing.csv")
+Electro.FebDec.8 <- read.csv("Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to February - December and 8 months per year - Electrofishing.csv")
+Electro.FebDec.9 <- read.csv("Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to February - December and 9 months per year - Electrofishing.csv")
+Electro.FebDec.10 <- read.csv("Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to February - December and 10 months per year - Electrofishing.csv")
+Electro.MarDec <- read.csv("Annual CPUE by Species - Sub-Setting Sampling to March - December - Electrofishing.csv")
+Electro.MarDec.6 <- read.csv("Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to March - December and 6 months per year - Electrofishing.csv")
+Electro.MarDec.7 <- read.csv("Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to March - December and 7 months per year - Electrofishing.csv")
+Electro.MarDec.8 <- read.csv("Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to March - December and 8 months per year - Electrofishing.csv")
+Electro.MarDec.9 <- read.csv("Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to March - December and 9 months per year - Electrofishing.csv")
+Electro.MarNov <- read.csv("Annual CPUE by Species - Sub-Setting Sampling to March - November - Electrofishing.csv")
+Electro.MarNov.6 <- read.csv("Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to March - November and 6 months per year - Electrofishing.csv")
+Electro.MarNov.7 <- read.csv("Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to March - November and 7 months per year - Electrofishing.csv")
+Electro.MarNov.8 <- read.csv("Annual CPUE by Species - 1000 iterations of Sub-Setting Sampling to March - November and 8 months per year - Electrofishing.csv")
+```
+
+# CPUE Summaries
+## Trammel Net
+### Original
+```{r}
+Trammel.Summary.Org <- Trammel.Original %>%
+  filter(Year %in% c(2003:2018)) %>%
+  group_by(Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV)) %>%
+  arrange(Median.CV)
+write.csv(Trammel.Summary.Org, "Trammel Net/CV Summaries by Species/Original.csv", 
+          row.names = FALSE)
+```
+
+### All Months
+#### 11 months of Sampling
+```{r}
+Trammel.Summary.All.11.Year <- Trammel.All.11 %>%
+  group_by(Year, Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV))
+write.csv(Trammel.Summary.All.11.Year,
+          "Trammel Net/CV Summaries by Species and Year/Sub-Setting Sampling to 11 months.csv", 
+          row.names = FALSE)
+```
+
+```{r}
+Trammel.Summary.All.11 <- Trammel.All.11 %>%
+  filter(Year %in% c(2003:2018)) %>%
+  group_by(Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV)) %>%
+  arrange(Median.CV)
+write.csv(Trammel.Summary.All.11,
+          "Trammel Net/CV Summaries by Species/Sub-Setting Sampling to 11 months.csv", 
+          row.names = FALSE)
+```
+
+#### 10 months of Sampling
+```{r}
+Trammel.Summary.All.10.Year <- Trammel.All.10 %>%
+  group_by(Year, Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV))
+write.csv(Trammel.Summary.All.10.Year,
+          "Trammel Net/CV Summaries by Species and Year/Sub-Setting Sampling to 10 months.csv", 
+          row.names = FALSE)
+```
+
+```{r}
+Trammel.Summary.All.10 <- Trammel.All.10 %>%
+  filter(Year %in% c(2003:2018)) %>%
+  group_by(Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV)) %>%
+  arrange(Median.CV)
+write.csv(Trammel.Summary.All.10,
+          "Trammel Net/CV Summaries by Species/Sub-Setting Sampling to 10 months.csv", 
+          row.names = FALSE)
+```
+
+#### 9 months of Sampling
+```{r}
+Trammel.Summary.All.9.Year <- Trammel.All.9 %>%
+  group_by(Year, Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV))
+write.csv(Trammel.Summary.All.9.Year,
+          "Trammel Net/CV Summaries by Species and Year/Sub-Setting Sampling to 9 months.csv", 
+          row.names = FALSE)
+```
+
+```{r}
+Trammel.Summary.All.9 <- Trammel.All.9 %>%
+  filter(Year %in% c(2003:2018)) %>%
+  group_by(Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV)) %>%
+  arrange(Median.CV)
+write.csv(Trammel.Summary.All.9,
+          "Trammel Net/CV Summaries by Species/Sub-Setting Sampling to 9 months.csv", 
+          row.names = FALSE)
+```
+
+#### 8 months of Sampling
+```{r}
+Trammel.Summary.All.8.Year <- Trammel.All.8 %>%
+  group_by(Year, Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV))
+write.csv(Trammel.Summary.All.8.Year,
+          "Trammel Net/CV Summaries by Species and Year/Sub-Setting Sampling to 8 months.csv", 
+          row.names = FALSE)
+```
+
+```{r}
+Trammel.Summary.All.8 <- Trammel.All.8 %>%
+  filter(Year %in% c(2003:2018)) %>%
+  group_by(Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV)) %>%
+  arrange(Median.CV)
+write.csv(Trammel.Summary.All.8,
+          "Trammel Net/CV Summaries by Species/Sub-Setting Sampling to 8 months.csv", 
+          row.names = FALSE)
+```
+
+#### 7 months of Sampling
+```{r}
+Trammel.Summary.All.7.Year <- Trammel.All.7 %>%
+  group_by(Year, Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV))
+write.csv(Trammel.Summary.All.9.Year,
+          "Trammel Net/CV Summaries by Species and Year/Sub-Setting Sampling to 7 months.csv", 
+          row.names = FALSE)
+```
+
+```{r}
+Trammel.Summary.All.7 <- Trammel.All.7 %>%
+  filter(Year %in% c(2003:2018)) %>%
+  group_by(Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV)) %>%
+  arrange(Median.CV)
+write.csv(Trammel.Summary.All.7,
+          "Trammel Net/CV Summaries by Species/Sub-Setting Sampling to 7 months.csv", 
+          row.names = FALSE)
+```
+
+#### 6 months of Sampling
+```{r}
+Trammel.Summary.All.6.Year <- Trammel.All.6 %>%
+  group_by(Year, Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV))
+write.csv(Trammel.Summary.All.6.Year,
+          "Trammel Net/CV Summaries by Species and Year/Sub-Setting Sampling to 6 months.csv", 
+          row.names = FALSE)
+```
+
+```{r}
+Trammel.Summary.All.6 <- Trammel.All.6 %>%
+  filter(Year %in% c(2003:2018)) %>%
+  group_by(Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV)) %>%
+  arrange(Median.CV)
+write.csv(Trammel.Summary.All.6,
+          "Trammel Net/CV Summaries by Species/Sub-Setting Sampling to 6 months.csv", 
+          row.names = FALSE)
+```
+
+### February-December Sampling
+#### All Months
+```{r}
+Trammel.Summary.FebDec.Year <- Trammel.FebDec %>%
+  group_by(Year, Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV))
+write.csv(Trammel.Summary.FebDec.Year,
+          "Trammel Net/CV Summaries by Species and Year/February - December Sampling.csv", 
+          row.names = FALSE)
+```
+
+```{r}
+Trammel.Summary.FebDec <- Trammel.FebDec %>%
+  filter(Year %in% c(2003:2018)) %>%
+  group_by(Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV)) %>%
+  arrange(Median.CV)
+write.csv(Trammel.Summary.FebDec,
+          "Trammel Net/CV Summaries by Species/February - December.csv", 
+          row.names = FALSE)
+```
+
+#### 10 months of Sampling
+```{r}
+Trammel.Summary.FebDec.10.Year <- Trammel.FebDec.10 %>%
+  group_by(Year, Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV))
+write.csv(Trammel.Summary.FebDec.10.Year,
+          "Trammel Net/CV Summaries by Species and Year/February - December - Sub-Setting Sampling to 10 months.csv", 
+          row.names = FALSE)
+```
+
+```{r}
+Trammel.Summary.FebDec.10 <- Trammel.FebDec.10 %>%
+  filter(Year %in% c(2003:2018)) %>%
+  group_by(Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV)) %>%
+  arrange(Median.CV)
+write.csv(Trammel.Summary.FebDec.10,
+          "Trammel Net/CV Summaries by Species/February - December - Sub-Setting Sampling to 10 months.csv", 
+          row.names = FALSE)
+```
+
+#### 9 months of Sampling
+```{r}
+Trammel.Summary.FebDec.9.Year <- Trammel.FebDec.9 %>%
+  group_by(Year, Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV))
+write.csv(Trammel.Summary.FebDec.9.Year,
+          "Trammel Net/CV Summaries by Species and Year/February - December - Sub-Setting Sampling to 9 months.csv", 
+          row.names = FALSE)
+```
+
+```{r}
+Trammel.Summary.FebDec.9 <- Trammel.FebDec.9 %>%
+  filter(Year %in% c(2003:2018)) %>%
+  group_by(Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV)) %>%
+  arrange(Median.CV)
+write.csv(Trammel.Summary.FebDec.9,
+          "Trammel Net/CV Summaries by Species/February - December - Sub-Setting Sampling to 9 months.csv", 
+          row.names = FALSE)
+```
+
+#### 8 months of Sampling
+```{r}
+Trammel.Summary.FebDec.8.Year <- Trammel.FebDec.8 %>%
+  group_by(Year, Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV))
+write.csv(Trammel.Summary.FebDec.8.Year,
+          "Trammel Net/CV Summaries by Species and Year/February - December - Sub-Setting Sampling to 8 months.csv", 
+          row.names = FALSE)
+```
+
+```{r}
+Trammel.Summary.FebDec.8 <- Trammel.FebDec.8 %>%
+  filter(Year %in% c(2003:2018)) %>%
+  group_by(Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV)) %>%
+  arrange(Median.CV)
+write.csv(Trammel.Summary.FebDec.8,
+          "Trammel Net/CV Summaries by Species/February - December - Sub-Setting Sampling to 8 months.csv", 
+          row.names = FALSE)
+```
+
+#### 7 months of Sampling
+```{r}
+Trammel.Summary.FebDec.7.Year <- Trammel.FebDec.7 %>%
+  group_by(Year, Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV))
+write.csv(Trammel.Summary.FebDec.7.Year,
+          "Trammel Net/CV Summaries by Species and Year/February - December - Sub-Setting Sampling to 7 months.csv", 
+          row.names = FALSE)
+```
+
+```{r}
+Trammel.Summary.FebDec.7 <- Trammel.FebDec.7 %>%
+  filter(Year %in% c(2003:2018)) %>%
+  group_by(Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV)) %>%
+  arrange(Median.CV)
+write.csv(Trammel.Summary.FebDec.7,
+          "Trammel Net/CV Summaries by Species/February - December - Sub-Setting Sampling to 7 months.csv", 
+          row.names = FALSE)
+```
+
+#### 6 months of Sampling
+```{r}
+Trammel.Summary.FebDec.6.Year <- Trammel.FebDec.6 %>%
+  group_by(Year, Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV))
+write.csv(Trammel.Summary.FebDec.6.Year,
+          "Trammel Net/CV Summaries by Species and Year/February - December - Sub-Setting Sampling to 6 months.csv", 
+          row.names = FALSE)
+```
+
+```{r}
+Trammel.Summary.FebDec.6 <- Trammel.FebDec.6 %>%
+  filter(Year %in% c(2003:2018)) %>%
+  group_by(Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV)) %>%
+  arrange(Median.CV)
+write.csv(Trammel.Summary.FebDec.6,
+          "Trammel Net/CV Summaries by Species/February - December - Sub-Setting Sampling to 6 months.csv", row.names = FALSE)
+```
+
+### March-December Sampling
+#### All Months
+```{r}
+Trammel.Summary.MarDec.Year <- Trammel.MarDec %>%
+  group_by(Year, Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV))
+write.csv(Trammel.Summary.MarDec.Year,
+          "Trammel Net/CV Summaries by Species and Year/March - December Sampling.csv", 
+          row.names = FALSE)
+```
+
+```{r}
+Trammel.Summary.MarDec <- Trammel.MarDec %>%
+  filter(Year %in% c(2003:2018)) %>%
+  group_by(Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV)) %>%
+  arrange(Median.CV)
+write.csv(Trammel.Summary.MarDec,
+          "Trammel Net/CV Summaries by Species/March - December.csv", row.names = FALSE)
+```
+
+#### 9 months of Sampling
+```{r}
+Trammel.Summary.MarDec.9.Year <- Trammel.MarDec.9 %>%
+  group_by(Year, Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV))
+write.csv(Trammel.Summary.MarDec.9.Year,
+          "Trammel Net/CV Summaries by Species and Year/March - December - Sub-Setting Sampling to 9 months.csv", 
+          row.names = FALSE)
+```
+
+```{r}
+Trammel.Summary.MarDec.9 <- Trammel.MarDec.9 %>%
+  filter(Year %in% c(2003:2018)) %>%
+  group_by(Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV)) %>%
+  arrange(Median.CV)
+write.csv(Trammel.Summary.MarDec.9,
+          "Trammel Net/CV Summaries by Species/March - December - Sub-Setting Sampling to 9 months.csv", 
+          row.names = FALSE)
+```
+
+#### 8 months of Sampling
+```{r}
+Trammel.Summary.MarDec.8.Year <- Trammel.MarDec.8 %>%
+  group_by(Year, Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV))
+write.csv(Trammel.Summary.MarDec.8.Year,
+          "Trammel Net/CV Summaries by Species and Year/March - December - Sub-Setting Sampling to 8 months.csv", 
+          row.names = FALSE)
+```
+
+```{r}
+Trammel.Summary.MarDec.8 <- Trammel.MarDec.8 %>%
+  filter(Year %in% c(2003:2018)) %>%
+  group_by(Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV)) %>%
+  arrange(Median.CV)
+write.csv(Trammel.Summary.MarDec.8,
+          "Trammel Net/CV Summaries by Species/March - December - Sub-Setting Sampling to 8 months.csv", 
+          row.names = FALSE)
+```
+
+#### 7 months of Sampling
+```{r}
+Trammel.Summary.MarDec.7.Year <- Trammel.MarDec.7 %>%
+  group_by(Year, Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV))
+write.csv(Trammel.Summary.MarDec.7.Year,
+          "Trammel Net/CV Summaries by Species and Year/March - December - Sub-Setting Sampling to 7 months.csv", 
+          row.names = FALSE)
+```
+
+```{r}
+Trammel.Summary.MarDec.7 <- Trammel.MarDec.7 %>%
+  filter(Year %in% c(2003:2018)) %>%
+  group_by(Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV)) %>%
+  arrange(Median.CV)
+write.csv(Trammel.Summary.MarDec.7,
+          "Trammel Net/CV Summaries by Species/March - December - Sub-Setting Sampling to 7 months.csv", 
+          row.names = FALSE)
+```
+
+#### 6 months of Sampling
+```{r}
+Trammel.Summary.MarDec.6.Year <- Trammel.MarDec.6 %>%
+  group_by(Year, Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV))
+write.csv(Trammel.Summary.MarDec.6.Year,
+          "Trammel Net/CV Summaries by Species and Year/March - December - Sub-Setting Sampling to 6 months.csv", 
+          row.names = FALSE)
+```
+
+```{r}
+Trammel.Summary.MarDec.6 <- Trammel.MarDec.6 %>%
+  filter(Year %in% c(2003:2018)) %>%
+  group_by(Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV)) %>%
+  arrange(Median.CV)
+write.csv(Trammel.Summary.MarDec.6,
+          "Trammel Net/CV Summaries by Species/March - December - Sub-Setting Sampling to 6 months.csv", row.names = FALSE)
+```
+
+### March-November Sampling
+#### All Months
+```{r}
+Trammel.Summary.MarNov.Year <- Trammel.MarNov %>%
+  group_by(Year, Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV))
+write.csv(Trammel.Summary.MarNov.Year,
+          "Trammel Net/CV Summaries by Species and Year/March - November Sampling.csv", 
+          row.names = FALSE)
+```
+
+```{r}
+Trammel.Summary.MarNov <- Trammel.MarNov %>%
+  filter(Year %in% c(2003:2018)) %>%
+  group_by(Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV)) %>%
+  arrange(Median.CV)
+write.csv(Trammel.Summary.MarNov,
+          "Trammel Net/CV Summaries by Species/March - November.csv", row.names = FALSE)
+```
+
+#### 8 months of Sampling
+```{r}
+Trammel.Summary.MarNov.8.Year <- Trammel.MarNov.8 %>%
+  group_by(Year, Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV))
+write.csv(Trammel.Summary.MarNov.8.Year,
+          "Trammel Net/CV Summaries by Species and Year/March - November - Sub-Setting Sampling to 8 months.csv", 
+          row.names = FALSE)
+```
+
+```{r}
+Trammel.Summary.MarNov.8 <- Trammel.MarNov.8 %>%
+  filter(Year %in% c(2003:2018)) %>%
+  group_by(Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV)) %>%
+  arrange(Median.CV)
+write.csv(Trammel.Summary.MarNov.8,
+          "Trammel Net/CV Summaries by Species/March - November - Sub-Setting Sampling to 8 months.csv", 
+          row.names = FALSE)
+```
+
+#### 7 months of Sampling
+```{r}
+Trammel.Summary.MarNov.7.Year <- Trammel.MarNov.7 %>%
+  group_by(Year, Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV))
+write.csv(Trammel.Summary.MarNov.7.Year,
+          "Trammel Net/CV Summaries by Species and Year/March - November - Sub-Setting Sampling to 7 months.csv", 
+          row.names = FALSE)
+```
+
+```{r}
+Trammel.Summary.MarNov.7 <- Trammel.MarNov.7 %>%
+  filter(Year %in% c(2003:2018)) %>%
+  group_by(Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV)) %>%
+  arrange(Median.CV)
+write.csv(Trammel.Summary.MarNov.7,
+          "Trammel Net/CV Summaries by Species/March - November - Sub-Setting Sampling to 7 months.csv", 
+          row.names = FALSE)
+```
+
+#### 6 months of Sampling
+```{r}
+Trammel.Summary.MarNov.6.Year <- Trammel.MarNov.6 %>%
+  group_by(Year, Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV))
+write.csv(Trammel.Summary.MarNov.6.Year,
+          "Trammel Net/CV Summaries by Species and Year/March - November - Sub-Setting Sampling to 6 months.csv",
+          row.names = FALSE)
+```
+
+```{r}
+Trammel.Summary.MarNov.6 <- Trammel.MarNov.6 %>%
+  filter(Year %in% c(2003:2018)) %>%
+  group_by(Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV)) %>%
+  arrange(Median.CV)
+write.csv(Trammel.Summary.MarNov.6,
+          "Trammel Net/CV Summaries by Species/March - November - Sub-Setting Sampling to 6 months.csv",
+          row.names = FALSE)
+```
+
+## Electrofishing
+### Original
+```{r}
+Electro.Summary.Org <- Electro.Original %>%
+  filter(Year %in% c(2003:2018)) %>%
+  group_by(Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV)) %>%
+  arrange(Median.CV)
+write.csv(Electro.Summary.Org, 
+          "Electrofishing/CV Summaries by Species/Original.csv", 
+          row.names = FALSE)
+```
+
+### All Months
+#### 11 months of Sampling
+```{r}
+Electro.Summary.All.11.Year <- Electro.All.11 %>%
+  group_by(Year, Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV))
+write.csv(Electro.Summary.All.11.Year,
+          "Electrofishing/CV Summaries by Species and Year/Sub-Setting Sampling to 11 months.csv", row.names = FALSE)
+```
+
+```{r}
+Electro.Summary.All.11 <- Electro.All.11 %>%
+  filter(Year %in% c(2003:2018)) %>%
+  group_by(Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV)) %>%
+  arrange(Median.CV)
+write.csv(Electro.Summary.All.11,
+          "Electrofishing/CV Summaries by Species/Sub-Setting Sampling to 11 months.csv", row.names = FALSE)
+```
+
+#### 10 months of Sampling
+```{r}
+Electro.Summary.All.10.Year <- Electro.All.10 %>%
+  group_by(Year, Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV))
+write.csv(Electro.Summary.All.10.Year,
+          "Electrofishing/CV Summaries by Species and Year/Sub-Setting Sampling to 10 months.csv", row.names = FALSE)
+```
+
+```{r}
+Electro.Summary.All.10 <- Electro.All.10 %>%
+  filter(Year %in% c(2003:2018)) %>%
+  group_by(Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV)) %>%
+  arrange(Median.CV)
+write.csv(Electro.Summary.All.10,
+          "Electrofishing/CV Summaries by Species/Sub-Setting Sampling to 10 months.csv", row.names = FALSE)
+```
+
+#### 9 months of Sampling
+```{r}
+Electro.Summary.All.9.Year <- Electro.All.9 %>%
+  group_by(Year, Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV))
+write.csv(Electro.Summary.All.9.Year,
+          "Electrofishing/CV Summaries by Species and Year/Sub-Setting Sampling to 9 months.csv", 
+          row.names = FALSE)
+```
+
+```{r}
+Electro.Summary.All.9 <- Electro.All.9 %>%
+  filter(Year %in% c(2003:2018)) %>%
+  group_by(Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV)) %>%
+  arrange(Median.CV)
+write.csv(Electro.Summary.All.9,
+          "Electrofishing/CV Summaries by Species/Sub-Setting Sampling to 9 months.csv", 
+          row.names = FALSE)
+```
+
+#### 8 months of Sampling
+```{r}
+Electro.Summary.All.8.Year <- Electro.All.8 %>%
+  group_by(Year, Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV))
+write.csv(Electro.Summary.All.8.Year,
+          "Electrofishing/CV Summaries by Species and Year/Sub-Setting Sampling to 8 months.csv", 
+          row.names = FALSE)
+```
+
+```{r}
+Electro.Summary.All.8 <- Electro.All.8 %>%
+  filter(Year %in% c(2003:2018)) %>%
+  group_by(Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV)) %>%
+  arrange(Median.CV)
+write.csv(Electro.Summary.All.8,
+          "Electrofishing/CV Summaries by Species/Sub-Setting Sampling to 8 months.csv", 
+          row.names = FALSE)
+```
+
+#### 7 months of Sampling
+```{r}
+Electro.Summary.All.7.Year <- Electro.All.7 %>%
+  group_by(Year, Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV))
+write.csv(Electro.Summary.All.7.Year,
+          "Electrofishing/CV Summaries by Species and Year/Sub-Setting Sampling to 7 months.csv", 
+          row.names = FALSE)
+```
+
+```{r}
+Electro.Summary.All.7 <- Electro.All.7 %>%
+  filter(Year %in% c(2003:2018)) %>%
+  group_by(Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV)) %>%
+  arrange(Median.CV)
+write.csv(Electro.Summary.All.7,
+          "Electrofishing/CV Summaries by Species/Sub-Setting Sampling to 7 months.csv", 
+          row.names = FALSE)
+```
+
+#### 6 months of Sampling
+```{r}
+Electro.Summary.All.6.Year <- Electro.All.6 %>%
+  group_by(Year, Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV))
+write.csv(Electro.Summary.All.6.Year,
+          "Electrofishing/CV Summaries by Species and Year/Sub-Setting Sampling to 6 months.csv", 
+          row.names = FALSE)
+```
+
+```{r}
+Electro.Summary.All.6 <- Electro.All.6 %>%
+  filter(Year %in% c(2003:2018)) %>%
+  group_by(Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV)) %>%
+  arrange(Median.CV)
+write.csv(Electro.Summary.All.6,
+          "Electrofishing/CV Summaries by Species/Sub-Setting Sampling to 6 months.csv", 
+          row.names = FALSE)
+```
+
+### February-December Sampling
+#### All Months
+```{r}
+Electro.Summary.FebDec.Year <- Electro.FebDec %>%
+  group_by(Year, Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV))
+write.csv(Electro.Summary.FebDec.Year,
+          "Electrofishing/CV Summaries by Species and Year/February - December Sampling.csv", row.names = FALSE)
+```
+
+```{r}
+Electro.Summary.FebDec <- Electro.FebDec %>%
+  filter(Year %in% c(2003:2018)) %>%
+  group_by(Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV)) %>%
+  arrange(Median.CV)
+write.csv(Electro.Summary.FebDec,
+          "Electrofishing/CV Summaries by Species/February - December.csv", row.names = FALSE)
+```
+
+#### 10 months of Sampling
+```{r}
+Electro.Summary.FebDec.10.Year <- Electro.FebDec.10 %>%
+  group_by(Year, Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV))
+write.csv(Electro.Summary.FebDec.10.Year,
+          "Electrofishing/CV Summaries by Species and Year/February - December - Sub-Setting Sampling to 10 months.csv", row.names = FALSE)
+```
+
+```{r}
+Electro.Summary.FebDec.10 <- Electro.FebDec.10 %>%
+  filter(Year %in% c(2003:2018)) %>%
+  group_by(Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV)) %>%
+  arrange(Median.CV)
+write.csv(Electro.Summary.FebDec.10,
+          "Electrofishing/CV Summaries by Species/February - December - Sub-Setting Sampling to 10 months.csv", row.names = FALSE)
+```
+
+#### 9 months of Sampling
+```{r}
+Electro.Summary.FebDec.9.Year <- Electro.FebDec.9 %>%
+  group_by(Year, Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV))
+write.csv(Electro.Summary.FebDec.9.Year,
+          "Electrofishing/CV Summaries by Species and Year/February - December - Sub-Setting Sampling to 9 months.csv", row.names = FALSE)
+```
+
+```{r}
+Electro.Summary.FebDec.9 <- Electro.FebDec.9 %>%
+  filter(Year %in% c(2003:2018)) %>%
+  group_by(Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV)) %>%
+  arrange(Median.CV)
+write.csv(Electro.Summary.FebDec.9,
+          "Electrofishing/CV Summaries by Species/February - December - Sub-Setting Sampling to 9 months.csv", row.names = FALSE)
+```
+
+#### 8 months of Sampling
+```{r}
+Electro.Summary.FebDec.8.Year <- Electro.FebDec.8 %>%
+  group_by(Year, Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV))
+write.csv(Electro.Summary.FebDec.8.Year,
+          "Electrofishing/CV Summaries by Species and Year/February - December - Sub-Setting Sampling to 8 months.csv", row.names = FALSE)
+```
+
+```{r}
+Electro.Summary.FebDec.8 <- Electro.FebDec.8 %>%
+  filter(Year %in% c(2003:2018)) %>%
+  group_by(Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV)) %>%
+  arrange(Median.CV)
+write.csv(Electro.Summary.FebDec.8,
+          "Electrofishing/CV Summaries by Species/February - December - Sub-Setting Sampling to 8 months.csv", row.names = FALSE)
+```
+
+#### 7 months of Sampling
+```{r}
+Electro.Summary.FebDec.7.Year <- Electro.FebDec.7 %>%
+  group_by(Year, Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV))
+write.csv(Electro.Summary.FebDec.7.Year,
+          "Electrofishing/CV Summaries by Species and Year/February - December - Sub-Setting Sampling to 7 months.csv", row.names = FALSE)
+```
+
+```{r}
+Electro.Summary.FebDec.7 <- Electro.FebDec.7 %>%
+  filter(Year %in% c(2003:2018)) %>%
+  group_by(Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV)) %>%
+  arrange(Median.CV)
+write.csv(Electro.Summary.FebDec.7,
+          "Electrofishing/CV Summaries by Species/February - December - Sub-Setting Sampling to 7 months.csv", row.names = FALSE)
+```
+
+#### 6 months of Sampling
+```{r}
+Electro.Summary.FebDec.6.Year <- Electro.FebDec.6 %>%
+  group_by(Year, Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV))
+write.csv(Electro.Summary.FebDec.6.Year,
+          "Electrofishing/CV Summaries by Species and Year/February - December - Sub-Setting Sampling to 6 months.csv", row.names = FALSE)
+```
+
+```{r}
+Electro.Summary.FebDec.6 <- Electro.FebDec.6 %>%
+  filter(Year %in% c(2003:2018)) %>%
+  group_by(Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV)) %>%
+  arrange(Median.CV)
+write.csv(Electro.Summary.FebDec.6,
+          "Electrofishing/CV Summaries by Species/February - December - Sub-Setting Sampling to 6 months.csv", row.names = FALSE)
+```
+
+### March-December Sampling
+#### All Months
+```{r}
+Electro.Summary.MarDec.Year <- Electro.MarDec %>%
+  group_by(Year, Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV))
+write.csv(Electro.Summary.MarDec.Year,
+          "Electrofishing/CV Summaries by Species and Year/March - December Sampling.csv", row.names = FALSE)
+```
+
+```{r}
+Electro.Summary.MarDec <- Electro.MarDec %>%
+  filter(Year %in% c(2003:2018)) %>%
+  group_by(Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV)) %>%
+  arrange(Median.CV)
+write.csv(Electro.Summary.MarDec,
+          "Electrofishing/CV Summaries by Species/March - December.csv", row.names = FALSE)
+```
+
+#### 9 months of Sampling
+```{r}
+Electro.Summary.MarDec.9.Year <- Electro.MarDec.9 %>%
+  group_by(Year, Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV))
+write.csv(Electro.Summary.MarDec.9.Year,
+          "Electrofishing/CV Summaries by Species and Year/March - December - Sub-Setting Sampling to 9 months.csv", row.names = FALSE)
+```
+
+```{r}
+Electro.Summary.MarDec.9 <- Electro.MarDec.9 %>%
+  filter(Year %in% c(2003:2018)) %>%
+  group_by(Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV)) %>%
+  arrange(Median.CV)
+write.csv(Electro.Summary.MarDec.9,
+          "Electrofishing/CV Summaries by Species/March - December - Sub-Setting Sampling to 9 months.csv", row.names = FALSE)
+```
+
+#### 8 months of Sampling
+```{r}
+Electro.Summary.MarDec.8.Year <- Electro.MarDec.8 %>%
+  group_by(Year, Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV))
+write.csv(Electro.Summary.MarDec.8.Year,
+          "Electrofishing/CV Summaries by Species and Year/March - December - Sub-Setting Sampling to 8 months.csv", row.names = FALSE)
+```
+
+```{r}
+Electro.Summary.MarDec.8 <- Electro.MarDec.8 %>%
+  filter(Year %in% c(2003:2018)) %>%
+  group_by(Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV)) %>%
+  arrange(Median.CV)
+write.csv(Electro.Summary.MarDec.8,
+          "Electrofishing/CV Summaries by Species/March - December - Sub-Setting Sampling to 8 months.csv", row.names = FALSE)
+```
+
+#### 7 months of Sampling
+```{r}
+Electro.Summary.MarDec.7.Year <- Electro.MarDec.7 %>%
+  group_by(Year, Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV))
+write.csv(Electro.Summary.MarDec.7.Year,
+          "Electrofishing/CV Summaries by Species and Year/March - December - Sub-Setting Sampling to 7 months.csv", row.names = FALSE)
+```
+
+```{r}
+Electro.Summary.MarDec.7 <- Electro.MarDec.7 %>%
+  filter(Year %in% c(2003:2018)) %>%
+  group_by(Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV)) %>%
+  arrange(Median.CV)
+write.csv(Electro.Summary.MarDec.7,
+          "Electrofishing/CV Summaries by Species/March - December - Sub-Setting Sampling to 7 months.csv", row.names = FALSE)
+```
+
+#### 6 months of Sampling
+```{r}
+Electro.Summary.MarDec.6.Year <- Electro.MarDec.6 %>%
+  group_by(Year, Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV))
+write.csv(Electro.Summary.MarDec.6.Year,
+          "Electrofishing/CV Summaries by Species and Year/March - December - Sub-Setting Sampling to 6 months.csv", row.names = FALSE)
+```
+
+```{r}
+Electro.Summary.MarDec.6 <- Electro.MarDec.6 %>%
+  filter(Year %in% c(2003:2018)) %>%
+  group_by(Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV)) %>%
+  arrange(Median.CV)
+write.csv(Electro.Summary.MarDec.6,
+          "Electrofishing/CV Summaries by Species/March - December - Sub-Setting Sampling to 6 months.csv", row.names = FALSE)
+```
+
+### March-November Sampling
+#### All Months
+```{r}
+Electro.Summary.MarNov.Year <- Electro.MarNov %>%
+  group_by(Year, Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV))
+write.csv(Electro.Summary.MarNov.Year,
+          "Electrofishing/CV Summaries by Species and Year/March - November Sampling.csv", row.names = FALSE)
+```
+
+```{r}
+Electro.Summary.MarNov <- Electro.MarNov %>%
+  filter(Year %in% c(2003:2018)) %>%
+  group_by(Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV)) %>%
+  arrange(Median.CV)
+write.csv(Electro.Summary.MarNov,
+          "Electrofishing/CV Summaries by Species/March - November.csv", row.names = FALSE)
+```
+
+#### 8 months of Sampling
+```{r}
+Electro.Summary.MarNov.8.Year <- Electro.MarNov.8 %>%
+  group_by(Year, Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV))
+write.csv(Electro.Summary.MarNov.8.Year,
+          "Electrofishing/CV Summaries by Species and Year/March - November - Sub-Setting Sampling to 8 months.csv", row.names = FALSE)
+```
+
+```{r}
+Electro.Summary.MarNov.8 <- Electro.MarNov.8 %>%
+  filter(Year %in% c(2003:2018)) %>%
+  group_by(Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV)) %>%
+  arrange(Median.CV)
+write.csv(Electro.Summary.MarNov.8,
+          "Electrofishing/CV Summaries by Species/March - November - Sub-Setting Sampling to 8 months.csv", row.names = FALSE)
+```
+
+#### 7 months of Sampling
+```{r}
+Electro.Summary.MarNov.7.Year <- Electro.MarNov.7 %>%
+  group_by(Year, Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV))
+write.csv(Electro.Summary.MarNov.7.Year,
+          "Electrofishing/CV Summaries by Species and Year/March - November - Sub-Setting Sampling to 7 months.csv", row.names = FALSE)
+```
+
+```{r}
+Electro.Summary.MarNov.7 <- Electro.MarNov.7 %>%
+  filter(Year %in% c(2003:2018)) %>%
+  group_by(Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV)) %>%
+  arrange(Median.CV)
+write.csv(Electro.Summary.MarNov.7,
+          "Electrofishing/CV Summaries by Species/March - November - Sub-Setting Sampling to 7 months.csv", row.names = FALSE)
+```
+
+#### 6 months of Sampling
+```{r}
+Electro.Summary.MarNov.6.Year <- Electro.MarNov.6 %>%
+  group_by(Year, Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV))
+write.csv(Electro.Summary.MarNov.6.Year,
+          "Electrofishing/CV Summaries by Species and Year/March - November - Sub-Setting Sampling to 6 months.csv", row.names = FALSE)
+```
+
+```{r}
+Electro.Summary.MarNov.6 <- Electro.MarNov.6 %>%
+  filter(Year %in% c(2003:2018)) %>%
+  group_by(Species) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV)) %>%
+  arrange(Median.CV)
+write.csv(Electro.Summary.MarNov.6,
+          "Electrofishing/CV Summaries by Species/March - November - Sub-Setting Sampling to 6 months.csv", row.names = FALSE)
+```
+
+# Combined Data Sets
+## Trammel
+### Originals
+```{r}
+Trammel.Original <- Trammel.Original %>%
+  mutate(Run = 1, 
+         Months = "Jan-Dec",
+         `Sub-Sampling` = "12 Months")
+Trammel.All.11 <- Trammel.All.11 %>%
+  mutate(Months = "Jan-Dec",
+         `Sub-Sampling` = "11 Months")
+Trammel.All.10 <- Trammel.All.10 %>%
+  mutate(Months = "Jan-Dec",
+         `Sub-Sampling` = "10 Months")
+Trammel.All.9 <- Trammel.All.9 %>%
+  mutate(Months = "Jan-Dec",
+         `Sub-Sampling` = "9 Months")
+Trammel.All.8 <- Trammel.All.8 %>%
+  mutate(Months = "Jan-Dec",
+         `Sub-Sampling` = "8 Months")
+Trammel.All.7 <- Trammel.All.7 %>%
+  mutate(Months = "Jan-Dec",
+         `Sub-Sampling` = "7 Months")
+Trammel.All.6 <- Trammel.All.6 %>%
+  mutate(Months = "Jan-Dec",
+         `Sub-Sampling` = "6 Months")
+Trammel.FebDec <- Trammel.FebDec %>%
+  mutate(Run = 1,
+         Months = "Feb-Dec",
+         `Sub-Sampling` = "11 Months")
+Trammel.FebDec.10 <- Trammel.FebDec.10 %>%
+  mutate(Months = "Feb-Dec",
+         `Sub-Sampling` = "10 Months")
+Trammel.FebDec.9 <- Trammel.FebDec.9 %>%
+  mutate(Months = "Feb-Dec",
+         `Sub-Sampling` = "9 Months")
+Trammel.FebDec.8 <- Trammel.FebDec.8 %>%
+  mutate(Months = "Feb-Dec",
+         `Sub-Sampling` = "8 Months")
+Trammel.FebDec.7 <- Trammel.FebDec.7 %>%
+  mutate(Months = "Feb-Dec",
+         `Sub-Sampling` = "7 Months")
+Trammel.FebDec.6 <- Trammel.FebDec.6 %>%
+  mutate(Months = "Feb-Dec",
+         `Sub-Sampling` = "6 Months")
+Trammel.MarDec <- Trammel.MarDec %>%
+  mutate(Run = 1,
+         Months = "Mar-Dec",
+         `Sub-Sampling` = "10 Months")
+Trammel.MarDec.9 <- Trammel.MarDec.9 %>%
+  mutate(Months = "Mar-Dec",
+         `Sub-Sampling` = "9 Months")
+Trammel.MarDec.8 <- Trammel.MarDec.8 %>%
+  mutate(Months = "Mar-Dec",
+         `Sub-Sampling` = "8 Months")
+Trammel.MarDec.7 <- Trammel.MarDec.7 %>%
+  mutate(Months = "Mar-Dec",
+         `Sub-Sampling` = "7 Months")
+Trammel.MarDec.6 <- Trammel.FebDec.6 %>%
+  mutate(Months = "Mar-Dec",
+         `Sub-Sampling` = "6 Months")
+Trammel.MarNov <- Trammel.MarNov %>%
+  mutate(Run = 1, 
+         Months = "Mar-Nov",
+         `Sub-Sampling` = "9 Months")
+Trammel.MarNov.8 <- Trammel.MarNov.8 %>%
+  mutate(Months = "Mar-Nov",
+         `Sub-Sampling` = "8 Months")
+Trammel.MarNov.7 <- Trammel.MarNov.7 %>%
+  mutate(Months = "Mar-Nov",
+         `Sub-Sampling` = "7 Months")
+Trammel.MarNov.6 <- Trammel.MarNov.6 %>%
+  mutate(Months = "Mar-Nov",
+         `Sub-Sampling` = "6 Months")
+```
+
+### Combined
+```{r}
+Trammel.Combined <- rbind(Trammel.Original, Trammel.All.11, Trammel.All.10, Trammel.All.9,
+                          Trammel.All.8, Trammel.All.7, Trammel.All.6, Trammel.FebDec,
+                          Trammel.FebDec.10, Trammel.FebDec.9, Trammel.FebDec.8,
+                          Trammel.FebDec.7, Trammel.FebDec.6, Trammel.MarDec, Trammel.MarDec.9,
+                          Trammel.MarDec.8, Trammel.MarDec.7, Trammel.MarDec.6, Trammel.MarNov,
+                          Trammel.MarNov.8, Trammel.MarNov.7, Trammel.MarNov.6) %>%
+mutate(Months = factor(Months,
+                       levels = c("Jan-Dec", "Feb-Dec", "Mar-Dec", "Mar-Nov")),
+       `Sub-Sampling` = factor(`Sub-Sampling`,
+                               levels = c("12 Months", "11 Months", "10 Months", "9 Months",
+                                          "8 Months", "7 Months", "6 Months")),
+       Month.SubSample = factor(paste(Months, `Sub-Sampling`, sep = "\n"),
+                                levels = c("Jan-Dec\n12 Months","Jan-Dec\n11 Months",
+                                           "Jan-Dec\n10 Months", "Jan-Dec\n9 Months",
+                                           "Jan-Dec\n8 Months", "Jan-Dec\n7 Months",
+                                           "Jan-Dec\n6 Months","Feb-Dec\n11 Months",
+                                           "Feb-Dec\n10 Months", "Feb-Dec\n9 Months",
+                                           "Feb-Dec\n8 Months", "Feb-Dec\n7 Months",
+                                           "Feb-Dec\n6 Months", "Mar-Dec\n10 Months",
+                                           "Mar-Dec\n9 Months", "Mar-Dec\n8 Months",
+                                           "Mar-Dec\n7 Months", "Mar-Dec\n6 Months",
+                                           "Mar-Nov\n9 Months", "Mar-Nov\n8 Months",
+                                           "Mar-Nov\n7 Months", "Mar-Nov\n6 Months")))
+write.csv(Trammel.Combined, "Trammel Net/Annual CPUE by Species.csv", row.names = FALSE)
+```
+
+### CV Statistics by Year, Species, Months Sampled, and Sampling Intensity
+```{r}
+Trammel.Summary.Year <- Trammel.Combined %>%
+  group_by(Year, Species, Months, `Sub-Sampling`, Month.SubSample) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV)) %>%
+  ungroup()
+write.csv(Trammel.Summary.Year,
+          "Trammel Net/CV Summary by Year, Species, Sampling Months, and Intensity/CV Summary.csv", 
+          row.names = FALSE)
+```
+
+### CV Statistics by Species, Months Sampled, and Sampling Intensity
+```{r}
+Trammel.Summary <- Trammel.Combined %>%
+  filter(Year %in% c(2003:2018)) %>%
+  group_by(Species, Months, `Sub-Sampling`, Month.SubSample) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV)) %>%
+  arrange(Median.CV) %>%
+  ungroup() %>%
+  group_by(Species) %>%
+  mutate(Relative.CV = (Median.CV / first(Median.CV) - 1) * 100) %>%
+  arrange(Species, Median.CV) %>%
+  ungroup()
+write.csv(Trammel.Summary,
+          "Trammel Net/CV Summary by Species, Sampling Months, and Intensity/CV Summary.csv", 
+          row.names = FALSE)
+```
+
+### CPUE by Year, Species, Months Sampled, and Sampling Intensity
+```{r}
+Trammel.CPUE <- Trammel.Combined %>%
+  group_by(Year, Species, Months, `Sub-Sampling`, Month.SubSample) %>%
+  summarize(Abundance = median(Abundance),
+            ci_l = median(ci_l),
+            ci_u = median(ci_u)) %>%
+  ungroup() 
+write.csv(Trammel.CPUE,
+          "Trammel Net/CPUE/Relative Abundance by Species, Sampling Months, and Intensity.csv", row.names = FALSE)
+```
+
+## Electrofishing
+### Originals
+```{r}
+Electro.Original <- Electro.Original %>%
+  mutate(Run = 1, 
+         Months = "Jan-Dec",
+         `Sub-Sampling` = "12 Months") %>%
+  rename(Abundance = CPUE)
+Electro.All.11 <- Electro.All.11 %>%
+  mutate(Months = "Jan-Dec",
+         `Sub-Sampling` = "11 Months")
+Electro.All.10 <- Electro.All.10 %>%
+  mutate(Months = "Jan-Dec",
+         `Sub-Sampling` = "10 Months")
+Electro.All.9 <- Electro.All.9 %>%
+  mutate(Months = "Jan-Dec",
+         `Sub-Sampling` = "9 Months")
+Electro.All.8 <- Electro.All.8 %>%
+  mutate(Months = "Jan-Dec",
+         `Sub-Sampling` = "8 Months")
+Electro.All.7 <- Electro.All.7 %>%
+  mutate(Months = "Jan-Dec",
+         `Sub-Sampling` = "7 Months")
+Electro.All.6 <- Electro.All.6 %>%
+  mutate(Months = "Jan-Dec",
+         `Sub-Sampling` = "6 Months")
+Electro.FebDec <- Electro.FebDec %>%
+  mutate(Run = 1,
+         Months = "Feb-Dec",
+         `Sub-Sampling` = "11 Months")
+Electro.FebDec.10 <- Electro.FebDec.10 %>%
+  mutate(Months = "Feb-Dec",
+         `Sub-Sampling` = "10 Months")
+Electro.FebDec.9 <- Electro.FebDec.9 %>%
+  mutate(Months = "Feb-Dec",
+         `Sub-Sampling` = "9 Months")
+Electro.FebDec.8 <- Electro.FebDec.8 %>%
+  mutate(Months = "Feb-Dec",
+         `Sub-Sampling` = "8 Months")
+Electro.FebDec.7 <- Electro.FebDec.7 %>%
+  mutate(Months = "Feb-Dec",
+         `Sub-Sampling` = "7 Months")
+Electro.FebDec.6 <- Electro.FebDec.6 %>%
+  mutate(Months = "Feb-Dec",
+         `Sub-Sampling` = "6 Months")
+Electro.MarDec <- Electro.MarDec %>%
+  mutate(Run = 1,
+         Months = "Mar-Dec",
+         `Sub-Sampling` = "10 Months")
+Electro.MarDec.9 <- Electro.MarDec.9 %>%
+  mutate(Months = "Mar-Dec",
+         `Sub-Sampling` = "9 Months")
+Electro.MarDec.8 <- Electro.MarDec.8 %>%
+  mutate(Months = "Mar-Dec",
+         `Sub-Sampling` = "8 Months")
+Electro.MarDec.7 <- Electro.MarDec.7 %>%
+  mutate(Months = "Mar-Dec",
+         `Sub-Sampling` = "7 Months")
+Electro.MarDec.6 <- Electro.FebDec.6 %>%
+  mutate(Months = "Mar-Dec",
+         `Sub-Sampling` = "6 Months")
+Electro.MarNov <- Electro.MarNov %>%
+  mutate(Run = 1,
+         Months = "Mar-Nov",
+         `Sub-Sampling` = "9 Months")
+Electro.MarNov.8 <- Electro.MarNov.8 %>%
+  mutate(Months = "Mar-Nov",
+         `Sub-Sampling` = "8 Months")
+Electro.MarNov.7 <- Electro.MarNov.7 %>%
+  mutate(Months = "Mar-Nov",
+         `Sub-Sampling` = "7 Months")
+Electro.MarNov.6 <- Electro.MarNov.6 %>%
+  mutate(Months = "Mar-Nov",
+         `Sub-Sampling` = "6 Months")
+```
+
+### Combined
+```{r}
+Electro.Combined <- rbind(Electro.Original, Electro.All.11, Electro.All.10, Electro.All.9,
+                          Electro.All.8, Electro.All.7, Electro.All.6, Electro.FebDec,
+                          Electro.FebDec.10, Electro.FebDec.9, Electro.FebDec.8,
+                          Electro.FebDec.7, Electro.FebDec.6, Electro.MarDec, Electro.MarDec.9,
+                          Electro.MarDec.8, Electro.MarDec.7, Electro.MarDec.6, Electro.MarNov,
+                          Electro.MarNov.8, Electro.MarNov.7, Electro.MarNov.6) %>%
+mutate(Months = factor(Months,
+                       levels = c("Jan-Dec", "Feb-Dec", "Mar-Dec", "Mar-Nov")),
+       `Sub-Sampling` = factor(`Sub-Sampling`,
+                               levels = c("12 Months", "11 Months", "10 Months", "9 Months",
+                                          "8 Months", "7 Months", "6 Months")),
+       Month.SubSample = factor(paste(Months, `Sub-Sampling`, sep = "\n"),
+                                levels = c("Jan-Dec\n12 Months","Jan-Dec\n11 Months",
+                                           "Jan-Dec\n10 Months", "Jan-Dec\n9 Months",
+                                           "Jan-Dec\n8 Months", "Jan-Dec\n7 Months",
+                                           "Jan-Dec\n6 Months","Feb-Dec\n11 Months",
+                                           "Feb-Dec\n10 Months", "Feb-Dec\n9 Months",
+                                           "Feb-Dec\n8 Months", "Feb-Dec\n7 Months",
+                                           "Feb-Dec\n6 Months", "Mar-Dec\n10 Months",
+                                           "Mar-Dec\n9 Months", "Mar-Dec\n8 Months",
+                                           "Mar-Dec\n7 Months", "Mar-Dec\n6 Months",
+                                           "Mar-Nov\n9 Months", "Mar-Nov\n8 Months",
+                                           "Mar-Nov\n7 Months", "Mar-Nov\n6 Months")))
+write.csv(Electro.Combined, "Electrofishing/Annual CPUE by Species.csv", row.names = FALSE)
+```
+
+### CV Statistics by Year, Species, Months Sampled, and Sampling Intensity
+```{r}
+Electro.Summary.Year <- Electro.Combined %>%
+  group_by(Year, Species, Months, `Sub-Sampling`, Month.SubSample) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV)) %>%
+  ungroup()
+write.csv(Electro.Summary.Year,
+          "Electrofishing/CV Summary by Year, Species, Sampling Months, and Intensity/CV Summary.csv", row.names = FALSE)
+```
+
+### CV Statistics by Species, Months Sampled, and Sampling Intensity
+```{r}
+Electro.Summary <- Electro.Combined %>%
+  filter(Year %in% c(2003:2018)) %>%
+  group_by(Species, Months, `Sub-Sampling`, Month.SubSample) %>%
+  summarize(n = sum(!is.na(cv)),
+            Median.CV = median(cv, na.rm = TRUE),
+            Min = min(cv, na.rm = TRUE),
+            Lower = quantile(cv, 0.025, na.rm = TRUE),
+            Avg.CV = mean(cv, na.rm = TRUE),
+            Upper = quantile(cv, 0.0975, na.rm = TRUE),
+            Max = max(cv, na.rm = TRUE)) %>%
+  filter(!is.na(Avg.CV)) %>%
+  arrange(Median.CV) %>%
+  ungroup() %>%
+  group_by(Species) %>%
+  mutate(Relative.CV = (Median.CV / first(Median.CV) - 1) * 100) %>%
+  arrange(Species, Median.CV) %>%
+  ungroup()
+write.csv(Electro.Summary,
+          "Electrofishing/CV Summary by Species, Sampling Months, and Intensity/CV Summary.csv", 
+          row.names = FALSE)
+```
+
+### CPUE by Year, Species, Months Sampled, and Sampling Intensity
+```{r}
+Electro.CPUE <- Electro.Combined %>%
+  group_by(Year, Species, Months, `Sub-Sampling`, Month.SubSample) %>%
+  summarize(Abundance = median(Abundance),
+            ci_l = median(ci_l),
+            ci_u = median(ci_u)) %>%
+  ungroup() 
+write.csv(Electro.CPUE,
+          "Electrofishing/CPUE/Relative Abundance by Species, Sampling Months, and Intensity.csv", row.names = FALSE)
+```
+
+# Workspace Cleanup
+```{r}
+rm(Trammel.Original, Trammel.All.11, Trammel.All.10, Trammel.All.9, Trammel.All.8, 
+   Trammel.All.7, Trammel.All.6, Trammel.FebDec, Trammel.FebDec.10, Trammel.FebDec.9, 
+   Trammel.FebDec.8, Trammel.FebDec.7, Trammel.FebDec.6, Trammel.MarDec, Trammel.MarDec.9,
+   Trammel.MarDec.8, Trammel.MarDec.7, Trammel.MarDec.6, Trammel.MarNov, Trammel.MarNov.8,
+   Trammel.MarNov.7, Trammel.MarNov.6, Electro.Original, Electro.All.11, Electro.All.10, 
+   Electro.All.9, Electro.All.8, Electro.All.7, Electro.All.6, Electro.FebDec, 
+   Electro.FebDec.10, Electro.FebDec.9, Electro.FebDec.8, Electro.FebDec.7, Electro.FebDec.6, 
+   Electro.MarDec, Electro.MarDec.9, Electro.MarDec.8, Electro.MarDec.7, Electro.MarDec.6, 
+   Electro.MarNov, Electro.MarNov.8, Electro.MarNov.7, Electro.MarNov.6, 
+   Trammel.Summary.All.11.Year, Trammel.Summary.All.10.Year, Trammel.Summary.All.9.Year, 
+   Trammel.Summary.All.8.Year, Trammel.Summary.All.7.Year, Trammel.Summary.All.6.Year,
+   Trammel.Summary.All.11, Trammel.Summary.All.10, Trammel.Summary.All.9, Trammel.Summary.All.8,
+   Trammel.Summary.All.7, Trammel.Summary.All.6, Trammel.Summary.FebDec.Year, 
+   Trammel.Summary.FebDec.10.Year, Trammel.Summary.FebDec.9.Year, Trammel.Summary.FebDec.8.Year,
+   Trammel.Summary.FebDec.7.Year, Trammel.Summary.FebDec.6.Year, Trammel.Summary.FebDec,
+   Trammel.Summary.FebDec.10, Trammel.Summary.FebDec.9, Trammel.Summary.FebDec.8, 
+   Trammel.Summary.FebDec.7, Trammel.Summary.FebDec.6, Trammel.Summary.MarDec.Year, 
+   Trammel.Summary.MarDec.9.Year, Trammel.Summary.MarDec.8.Year, Trammel.Summary.MarDec.7.Year,
+   Trammel.Summary.MarDec.6.Year, Trammel.Summary.MarDec, Trammel.Summary.MarDec.9, 
+   Trammel.Summary.MarDec.8, Trammel.Summary.MarDec.7, Trammel.Summary.MarDec.6, 
+   Trammel.Summary.MarNov.Year, Trammel.Summary.MarNov.8.Year, Trammel.Summary.MarNov.7.Year,
+   Trammel.Summary.MarNov.6.Year, Trammel.Summary.MarNov, Trammel.Summary.MarNov.8, 
+   Trammel.Summary.MarNov.7, Trammel.Summary.MarNov.6, Electro.Summary.All.11.Year, 
+   Electro.Summary.All.10.Year, Electro.Summary.All.9.Year, Electro.Summary.All.8.Year, 
+   Electro.Summary.All.7.Year, Electro.Summary.All.6.Year, Electro.Summary.All.11, 
+   Electro.Summary.All.10, Electro.Summary.All.9, Electro.Summary.All.8, Electro.Summary.All.7, 
+   Electro.Summary.All.6, Electro.Summary.FebDec.Year, Electro.Summary.FebDec.10.Year, 
+   Electro.Summary.FebDec.9.Year, Electro.Summary.FebDec.8.Year, Electro.Summary.FebDec.7.Year, 
+   Electro.Summary.FebDec.6.Year, Electro.Summary.FebDec, Electro.Summary.FebDec.10, 
+   Electro.Summary.FebDec.9, Electro.Summary.FebDec.8, Electro.Summary.FebDec.7, 
+   Electro.Summary.FebDec.6, Electro.Summary.MarDec.Year, Electro.Summary.MarDec.9.Year, 
+   Electro.Summary.MarDec.8.Year, Electro.Summary.MarDec.7.Year, Electro.Summary.MarDec.6.Year, 
+   Electro.Summary.MarDec, Electro.Summary.MarDec.9, Electro.Summary.MarDec.8, 
+   Electro.Summary.MarDec.7, Electro.Summary.MarDec.6, Electro.Summary.MarNov.Year, 
+   Electro.Summary.MarNov.8.Year, Electro.Summary.MarNov.7.Year, Electro.Summary.MarNov.6.Year, 
+   Electro.Summary.MarNov, Electro.Summary.MarNov.8, Electro.Summary.MarNov.7, 
+   Electro.Summary.MarNov.6, Trammel.Summary.Org, Electro.Summary.Org)
+```
+
+```{r}
+save.image("Simulation Summaries.rdata")
+```
